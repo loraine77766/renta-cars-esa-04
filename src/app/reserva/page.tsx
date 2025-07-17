@@ -33,7 +33,7 @@ function ReservationPageComponent({ searchParams }: { searchParams: { carId?: st
                 <div className="mb-6">
                     <Button variant="outline" onClick={() => router.back()}>
                         <ArrowLeft className="mr-2 h-4 w-4" />
-                        Volver a la lista
+                        Volver
                     </Button>
                 </div>
                 <ReservationForm car={car} />
@@ -73,7 +73,7 @@ function ReservationPageContent(props: ReservationPageProps) {
             <div className="mb-6">
                 <Button variant="outline" onClick={() => router.back()}>
                     <ArrowLeft className="mr-2 h-4 w-4" />
-                    Volver a la lista
+                    Volver
                 </Button>
             </div>
             <ReservationForm car={car} />
