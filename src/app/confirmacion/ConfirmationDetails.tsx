@@ -3,16 +3,16 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { format, differenceInYears, parse } from 'date-fns';
+import { format, differenceInYears, parse, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import type { Car } from '@/lib/types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -20,7 +20,6 @@ import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { addDays } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 
 interface ConfirmationDetailsProps {
@@ -74,9 +73,13 @@ const modifySchema = z.object({
 const generateTimeSlots = () => {
     const slots: string[] = [];
     for (let i = 0; i < 24; i++) {
-        const hour = i % 12 === 0 ? 12 : i % 12;
-        const period = i < 12 ? 'AM' : 'PM';
-        slots.push(`${hour}:00 ${period}`);
+        for (let j = 0; j < 60; j += 30) {
+            const hour = i;
+            const minute = j;
+            const date = new Date();
+            date.setHours(hour, minute);
+            slots.push(format(date, "hh:mm a"));
+        }
     }
     return slots;
 };
@@ -88,17 +91,29 @@ const FUEL_COST = 59;
 
 export default function ConfirmationDetails({ car, startDate, endDate, rentalDays, totalPrice, pickupLocation, dropoffLocation, pickupTime, dropoffTime }: ConfirmationDetailsProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [formattedDates, setFormattedDates] = useState({ start: '', end: '' });
 
   useEffect(() => {
-    // Combine date and time strings and then parse them
-    const startDateTime = new Date(`${format(startDate, 'yyyy-MM-dd')}T${pickupTime.replace(/(AM|PM)/, ' $1').split(':')[0]}:00`);
-    const endDateTime = new Date(`${format(endDate, 'yyyy-MM-dd')}T${dropoffTime.replace(/(AM|PM)/, ' $1').split(':')[0]}:00`);
-    
-    setFormattedDates({
-        start: format(startDateTime, "EEE dd/MM/yyyy - HH:mm", { locale: es }),
-        end: format(endDateTime, "EEE dd/MM/yyyy - HH:mm", { locale: es }),
-    });
+    try {
+      const startDateTimeStr = `${format(startDate, 'yyyy-MM-dd')} ${pickupTime}`;
+      const endDateTimeStr = `${format(endDate, 'yyyy-MM-dd')} ${dropoffTime}`;
+      
+      const startDateTime = parse(startDateTimeStr, 'yyyy-MM-dd hh:mm a', new Date());
+      const endDateTime = parse(endDateTimeStr, 'yyyy-MM-dd hh:mm a', new Date());
+
+      if (!isNaN(startDateTime.getTime()) && !isNaN(endDateTime.getTime())) {
+          setFormattedDates({
+              start: format(startDateTime, "EEE dd/MM/yyyy - HH:mm", { locale: es }),
+              end: format(endDateTime, "EEE dd/MM/yyyy - HH:mm", { locale: es }),
+          });
+      } else {
+        setFormattedDates({ start: 'Fecha inválida', end: 'Fecha inválida' });
+      }
+    } catch (e) {
+      console.error("Error formatting dates:", e);
+      setFormattedDates({ start: 'Error', end: 'Error' });
+    }
   }, [startDate, endDate, pickupTime, dropoffTime]);
   
   const form = useForm<z.infer<typeof formSchema>>({
@@ -107,6 +122,9 @@ export default function ConfirmationDetails({ car, startDate, endDate, rentalDay
       name: '',
       lastName1: '',
       lastName2: '',
+      birthDay: '' as any,
+      birthMonth: '' as any,
+      birthYear: '' as any,
       phone: '',
       country: '',
       passport: '',
@@ -132,7 +150,14 @@ export default function ConfirmationDetails({ car, startDate, endDate, rentalDay
       const toDate = format(values.dropoffDate, 'yyyy-MM-dd');
       const fromTime = values.pickupTime;
       const toTime = values.dropoffTime;
-      router.push(`/confirmacion?carId=${car.id}&from=${fromDate}&to=${toDate}&pickupLocation=${pickupLocation}&dropoffLocation=${dropoffLocation}&pickupTime=${fromTime}&dropoffTime=${toTime}`);
+      
+      const currentParams = new URLSearchParams(searchParams.toString());
+      currentParams.set('from', fromDate);
+      currentParams.set('to', toDate);
+      currentParams.set('pickupTime', fromTime);
+      currentParams.set('dropoffTime', toTime);
+
+      router.push(`/confirmacion?${currentParams.toString()}`);
   }
 
   function onSubmit(values: z.infer<typeof formSchema>) {
@@ -163,7 +188,7 @@ Combustible: $${FUEL_COST.toFixed(2)}
 -----------------------------------
 ¡Gracias!
     `;
-    const whatsappUrl = `https://wa.me/1825609725?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = `https://wa.me/1825609725?text=${encodeURIComponent(message.trim())}`;
     window.open(whatsappUrl, '_blank');
   }
 
@@ -379,3 +404,5 @@ Combustible: $${FUEL_COST.toFixed(2)}
     </div>
   );
 }
+
+    
