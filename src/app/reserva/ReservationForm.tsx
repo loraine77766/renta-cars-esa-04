@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -56,11 +56,22 @@ export default function ReservationForm({ car }: { car: Car }) {
     }
   });
 
-  const { watch } = form;
+  const { watch, trigger } = form;
   const pickupDate = watch('pickupDate');
   const dropoffDate = watch('dropoffDate');
+  
+  const [rentalDays, setRentalDays] = useState(0);
+  
+  useEffect(() => {
+    if (pickupDate && dropoffDate && dropoffDate > pickupDate) {
+      setRentalDays(differenceInCalendarDays(dropoffDate, pickupDate) + 1);
+      trigger("dropoffDate");
+    } else {
+      setRentalDays(0);
+    }
+  }, [pickupDate, dropoffDate, trigger]);
 
-  const rentalDays = pickupDate && dropoffDate ? differenceInCalendarDays(dropoffDate, pickupDate) + 1 : 0;
+
   const requiresMinDays = car.details?.notes.some(n => n.includes('Mínimo de renta'));
   const minRentDays = requiresMinDays ? parseInt(car.details.notes.find(n => n.includes('Mínimo de renta'))?.split(' ')[4] ?? '0') : 1;
   
