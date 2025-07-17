@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { format } from 'date-fns';
+import { format, differenceInYears, parse } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -42,7 +42,18 @@ const formSchema = z.object({
   email: z.string().email({ message: 'El correo electrónico no es válido.' }),
   flightNumber: z.string().optional(),
   airline: z.string().optional(),
+}).refine(data => {
+    const { birthDay, birthMonth, birthYear } = data;
+    const dateOfBirth = parse(`${birthYear}-${birthMonth}-${birthDay}`, 'yyyy-MM-dd', new Date());
+    if (isNaN(dateOfBirth.getTime())) {
+        return false; // Invalid date format, let individual field validators handle it.
+    }
+    return differenceInYears(new Date(), dateOfBirth) >= 21;
+}, {
+    message: 'Debes tener al menos 21 años para rentar un auto.',
+    path: ['birthYear'], // Attach error to the year field for visibility
 });
+
 
 const INSURANCE_PER_DAY = 25;
 const FUEL_COST = 59;
@@ -55,8 +66,8 @@ export default function ConfirmationDetails({ car, startDate, endDate, rentalDay
   useEffect(() => {
     // This now runs only on the client, preventing hydration mismatch.
     setFormattedDates({
-        start: format(startDate, "EEE dd/MM/yyyy - HH:mm", { locale: es }),
-        end: format(endDate, "EEE dd/MM/yyyy - HH:mm", { locale: es }),
+        start: format(new Date(startDate), "EEE dd/MM/yyyy - HH:mm", { locale: es }),
+        end: format(new Date(endDate), "EEE dd/MM/yyyy - HH:mm", { locale: es }),
     });
   }, [startDate, endDate]);
   
