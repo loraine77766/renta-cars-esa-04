@@ -91,11 +91,15 @@ export default function ConfirmationDetails({ car, startDate, endDate, rentalDay
   const [formattedDates, setFormattedDates] = useState({ start: '', end: '' });
 
   useEffect(() => {
+    // Combine date and time strings and then parse them
+    const startDateTime = new Date(`${format(startDate, 'yyyy-MM-dd')}T${pickupTime.replace(/(AM|PM)/, ' $1').split(':')[0]}:00`);
+    const endDateTime = new Date(`${format(endDate, 'yyyy-MM-dd')}T${dropoffTime.replace(/(AM|PM)/, ' $1').split(':')[0]}:00`);
+    
     setFormattedDates({
-        start: format(new Date(startDate), "EEE dd/MM/yyyy - HH:mm", { locale: es }),
-        end: format(new Date(endDate), "EEE dd/MM/yyyy - HH:mm", { locale: es }),
+        start: format(startDateTime, "EEE dd/MM/yyyy - HH:mm", { locale: es }),
+        end: format(endDateTime, "EEE dd/MM/yyyy - HH:mm", { locale: es }),
     });
-  }, [startDate, endDate]);
+  }, [startDate, endDate, pickupTime, dropoffTime]);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -231,6 +235,9 @@ Combustible: $${FUEL_COST.toFixed(2)}
                                         <FormItem><FormLabel>Compañía aérea</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                                     )}/>
                                 </div>
+                                <p className="text-sm text-muted-foreground text-center mt-4 mb-4">
+                                    Es importante que los datos de contácto (e-mail/teléfono) sean correctos para poder confirmar tu reserva. Sin ésta confirmación por parte nuestra, la reserva no será válida.
+                                </p>
                                 <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-lg py-6">
                                     Confirmar y Rentar por WhatsApp
                                 </Button>
