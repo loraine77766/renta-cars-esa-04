@@ -13,6 +13,9 @@ export default function Home() {
           <h1 className="font-headline text-4xl md:text-5xl font-bold text-primary mb-2">
             Renta de Autos en Cuba
           </h1>
+          <p className="text-lg text-muted-foreground max-w-3xl mx-auto mb-4">
+            RentCubaCar es una agencia en línea con asistencia telefónica dedicada a la intermediación, organización y realización de proyectos turísticos, planes e itinerarios y venta de productos turísticos como: alquiler de coches y reservas de hoteles.
+          </p>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Encuentra el auto perfecto para tu viaje. Fácil, rápido y confiable.
           </p>
