@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle } from 'lucide-react';
+import RentalInfo from './RentalInfo';
 
 interface ConfirmationDetailsProps {
   car: Car;
@@ -56,42 +57,46 @@ export default function ConfirmationDetails({ car, startDate, endDate, rentalDay
         <p className="text-center text-muted-foreground mb-8">Estás a un paso de asegurar tu vehículo. Por favor, revisa los detalles y completa tu información.</p>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <Card className="shadow-lg">
-                <CardHeader>
-                    <CardTitle className="font-headline text-2xl text-primary">Resumen de la Renta</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="relative h-56 w-full rounded-lg overflow-hidden mb-4">
-                        <Image src={car.imageUrl} alt={car.name} data-ai-hint={car.imageHint} fill className="object-cover" />
-                    </div>
-                    <h3 className="font-headline text-xl font-semibold text-primary">{car.name}</h3>
-                    <div className="flex flex-wrap gap-2 my-2">
-                        {car.features.map(f => <Badge key={f} variant="secondary">{f}</Badge>)}
-                    </div>
-                    <Separator className="my-4" />
-                    <div className="space-y-3 text-sm">
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Recogida:</span>
-                            <span className="font-semibold">{format(startDate, "PPP", { locale: es })}</span>
+            <div className="space-y-8">
+                <Card className="shadow-lg">
+                    <CardHeader>
+                        <CardTitle className="font-headline text-2xl text-primary">Resumen de la Renta</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="relative h-56 w-full rounded-lg overflow-hidden mb-4">
+                            <Image src={car.imageUrl} alt={car.name} data-ai-hint={car.imageHint} fill className="object-cover" />
                         </div>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Devolución:</span>
-                            <span className="font-semibold">{format(endDate, "PPP", { locale: es })}</span>
+                        <h3 className="font-headline text-xl font-semibold text-primary">{car.name}</h3>
+                        <div className="flex flex-wrap gap-2 my-2">
+                            {car.features.map(f => <Badge key={f} variant="secondary">{f}</Badge>)}
                         </div>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Total de días:</span>
-                            <span className="font-semibold">{rentalDays}</span>
+                        <Separator className="my-4" />
+                        <div className="space-y-3 text-sm">
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">Recogida:</span>
+                                <span className="font-semibold">{format(startDate, "PPP", { locale: es })}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">Devolución:</span>
+                                <span className="font-semibold">{format(endDate, "PPP", { locale: es })}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">Total de días:</span>
+                                <span className="font-semibold">{rentalDays}</span>
+                            </div>
                         </div>
-                    </div>
-                    <Separator className="my-4" />
-                    <div className="flex justify-between items-center text-2xl font-bold text-primary">
-                        <span className="font-headline">Precio Total:</span>
-                        <span>${totalPrice}</span>
-                    </div>
-                </CardContent>
-            </Card>
+                        <Separator className="my-4" />
+                        <div className="flex justify-between items-center text-2xl font-bold text-primary">
+                            <span className="font-headline">Precio Total:</span>
+                            <span>${totalPrice}</span>
+                        </div>
+                    </CardContent>
+                </Card>
 
-            <Card className="shadow-lg">
+                {car.details && <RentalInfo details={car.details} />}
+            </div>
+
+            <Card className="shadow-lg lg:sticky lg:top-8 h-fit">
                 <CardHeader>
                     <CardTitle className="font-headline text-2xl text-primary">Tus Datos</CardTitle>
                     <CardDescription>Completa el formulario para finalizar la reserva.</CardDescription>

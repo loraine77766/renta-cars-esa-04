@@ -6,6 +6,13 @@ export type Car = {
   imageUrl: string;
   features: string[];
   imageHint: string;
+  details?: {
+    additionalCharges: string[];
+    included: string[];
+    notIncluded: string[];
+    pickupAndDropoff: string[];
+    notes: string[];
+  }
 };
 
 export type SavedRental = {
