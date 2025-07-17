@@ -73,9 +73,11 @@ export default function ReservationForm({ car }: { car: Car }) {
   }, [pickupDate, dropoffDate, trigger]);
 
 
-  const requiresMinDays = car.details?.notes.some(n => n.includes('Mínimo de renta'));
-  const minRentDays = requiresMinDays ? parseInt(car.details.notes.find(n => n.includes('Mínimo de renta'))?.split(' ')[4] ?? '0') : 1;
-  
+  const minRentDaysString = car.details?.notes.find(n => n.includes('Mínimo de renta'));
+  const minRentDaysMatch = minRentDaysString ? minRentDaysString.match(/\d+/) : null;
+  const minRentDays = minRentDaysMatch ? parseInt(minRentDaysMatch[0], 10) : 1;
+  const requiresMinDays = !!minRentDaysString;
+
   const isDateRangeValid = rentalDays > 0 && (!requiresMinDays || rentalDays >= minRentDays);
 
   const dailyPrice = car.pricePerDay;

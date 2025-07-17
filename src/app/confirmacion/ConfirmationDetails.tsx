@@ -56,87 +56,88 @@ export default function ConfirmationDetails({ car, startDate, endDate, rentalDay
         <h1 className="font-headline text-3xl md:text-4xl font-bold text-primary mb-4 text-center">Confirma tu Renta</h1>
         <p className="text-center text-muted-foreground mb-8">Estás a un paso de asegurar tu vehículo. Por favor, revisa los detalles y completa tu información.</p>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="space-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            <div className="lg:col-span-2 space-y-8">
                 <Card className="shadow-lg">
                     <CardHeader>
-                        <CardTitle className="font-headline text-2xl text-primary">Resumen de la Renta</CardTitle>
+                        <CardTitle className="font-headline text-2xl text-primary">Tus Datos</CardTitle>
+                        <CardDescription>Completa el formulario para finalizar la reserva.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="relative h-56 w-full rounded-lg overflow-hidden mb-4">
-                            <Image src={car.imageUrl} alt={car.name} data-ai-hint={car.imageHint} fill className="object-cover" />
-                        </div>
-                        <h3 className="font-headline text-xl font-semibold text-primary">{car.name}</h3>
-                        <div className="flex flex-wrap gap-2 my-2">
-                            {car.features.map(f => <Badge key={f} variant="secondary">{f}</Badge>)}
-                        </div>
-                        <Separator className="my-4" />
-                        <div className="space-y-3 text-sm">
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">Recogida:</span>
-                                <span className="font-semibold">{format(startDate, "PPP", { locale: es })}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">Devolución:</span>
-                                <span className="font-semibold">{format(endDate, "PPP", { locale: es })}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">Total de días:</span>
-                                <span className="font-semibold">{rentalDays}</span>
-                            </div>
-                        </div>
-                        <Separator className="my-4" />
-                        <div className="flex justify-between items-center text-2xl font-bold text-primary">
-                            <span className="font-headline">Precio Total:</span>
-                            <span>${totalPrice}</span>
-                        </div>
+                        <Form {...form}>
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                                <FormField
+                                    control={form.control}
+                                    name="name"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Nombre completo</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Tu nombre y apellidos" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="email"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Correo electrónico</FormLabel>
+                                            <FormControl>
+                                                <Input type="email" placeholder="tu@correo.com" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-lg py-6">
+                                    Confirmar y Rentar
+                                </Button>
+                            </form>
+                        </Form>
                     </CardContent>
                 </Card>
 
-                {car.details && <RentalInfo details={car.details} />}
+                 {car.details && <RentalInfo details={car.details} />}
             </div>
-
+            
             <Card className="shadow-lg lg:sticky lg:top-8 h-fit">
                 <CardHeader>
-                    <CardTitle className="font-headline text-2xl text-primary">Tus Datos</CardTitle>
-                    <CardDescription>Completa el formulario para finalizar la reserva.</CardDescription>
+                    <CardTitle className="font-headline text-2xl text-primary">Resumen de la Renta</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                            <FormField
-                                control={form.control}
-                                name="name"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Nombre completo</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="Tu nombre y apellidos" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="email"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Correo electrónico</FormLabel>
-                                        <FormControl>
-                                            <Input type="email" placeholder="tu@correo.com" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-lg py-6">
-                                Confirmar y Rentar
-                            </Button>
-                        </form>
-                    </Form>
+                    <div className="relative h-40 w-full rounded-lg overflow-hidden mb-4">
+                        <Image src={car.imageUrl} alt={car.name} data-ai-hint={car.imageHint} fill className="object-cover" />
+                    </div>
+                    <h3 className="font-headline text-xl font-semibold text-primary">{car.name}</h3>
+                    <div className="flex flex-wrap gap-2 my-2">
+                        {car.features.map(f => <Badge key={f} variant="secondary">{f}</Badge>)}
+                    </div>
+                    <Separator className="my-4" />
+                    <div className="space-y-3 text-sm">
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Recogida:</span>
+                            <span className="font-semibold">{format(startDate, "PPP", { locale: es })}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Devolución:</span>
+                            <span className="font-semibold">{format(endDate, "PPP", { locale: es })}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Total de días:</span>
+                            <span className="font-semibold">{rentalDays}</span>
+                        </div>
+                    </div>
+                    <Separator className="my-4" />
+                    <div className="flex justify-between items-center text-2xl font-bold text-primary">
+                        <span className="font-headline">Precio Total:</span>
+                        <span>${totalPrice}</span>
+                    </div>
                 </CardContent>
             </Card>
+
         </div>
     </div>
   );
