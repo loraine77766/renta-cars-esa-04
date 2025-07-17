@@ -5,7 +5,7 @@ import AiRecommender from '@/components/AiRecommender';
 import { CarList } from '@/components/CarList';
 import { cars } from '@/lib/cars';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MessageSquare, Clock, ShieldCheck, Info, Map, ListChecks } from 'lucide-react';
+import { MessageSquare, Clock, ShieldCheck, Info, Map, ListChecks, CalendarSearch, Car, User, CreditCard, MailCheck } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
@@ -14,6 +14,34 @@ export default function Home() {
   const cheapestCar = sortedCars[0];
   const midPriceCars = sortedCars.filter(c => c.pricePerDay > cheapestCar.pricePerDay).slice(0, 2);
   const recommendedCars = [cheapestCar, ...midPriceCars].filter(Boolean);
+
+  const howToSteps = [
+    {
+      icon: <CalendarSearch className="h-8 w-8 text-accent" />,
+      title: "Lugar, hora y fecha",
+      description: "Seleccione Lugar, Hora y fecha y darle click a Buscar."
+    },
+    {
+      icon: <Car className="h-8 w-8 text-accent" />,
+      title: "Autos disponibles",
+      description: "Elija un Auto del resultados de su búsqueda y click para mas detalles."
+    },
+    {
+      icon: <User className="h-8 w-8 text-accent" />,
+      title: "Datos personales",
+      description: "Complete los datos y envíe la solicitud. Confirmamos disponibilidad en 24 horas."
+    },
+    {
+      icon: <CreditCard className="h-8 w-8 text-accent" />,
+      title: "Pagar reserva",
+      description: "Recibirá un link de pago y allí proceda al pago de su reserva."
+    },
+    {
+      icon: <MailCheck className="h-8 w-8 text-accent" />,
+      title: "Recibe tu Voucher",
+      description: "Una vez confirmado su pago, enviaremos el Voucher y su factura."
+    }
+  ];
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -34,6 +62,23 @@ export default function Home() {
                   Ver Autos Disponibles
                 </Link>
             </Button>
+        </section>
+
+        <section className="my-16">
+           <h2 className="font-headline text-3xl font-bold text-center mb-8 text-primary">¿Cómo reservar un Auto?</h2>
+           <div className="relative grid grid-cols-1 md:grid-cols-5 gap-8">
+              <div className="hidden md:block absolute top-1/2 left-0 w-full h-px bg-border -translate-y-1/2 -mt-8"></div>
+               {howToSteps.map((step, index) => (
+                   <div key={index} className="relative text-center">
+                       <div className="relative z-10 mx-auto bg-card border-2 border-accent rounded-full h-20 w-20 flex items-center justify-center mb-4">
+                           <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground rounded-full h-8 w-8 flex items-center justify-center font-bold text-lg">{index + 1}</span>
+                           {step.icon}
+                       </div>
+                       <h3 className="font-headline text-lg font-semibold text-primary">{step.title}</h3>
+                       <p className="text-sm text-muted-foreground">{step.description}</p>
+                   </div>
+               ))}
+           </div>
         </section>
 
         <section id="cars" className="my-16">
