@@ -12,15 +12,18 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { Input } from '@/components/ui/input';
 import { getAiRecommendations } from '@/app/actions';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import type { RecommendCarsOutput } from '@/ai/flows/recommend-cars';
+import { cars } from '@/lib/cars';
+import { CarCard } from './CarCard';
 
 const formSchema = z.object({
-  preferences: z.string().min(10, {
-    message: 'Describe con más detalle qué tipo de auto buscas.',
+  preferences: z.string().min(1, {
+    message: 'Describe qué tipo de auto buscas.',
   }),
 });
 
 export default function AiRecommender() {
-  const [recommendation, setRecommendation] = useState('');
+  const [recommendation, setRecommendation] = useState<RecommendCarsOutput | null>(null);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -33,16 +36,20 @@ export default function AiRecommender() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    setRecommendation('');
+    setRecommendation(null);
     setError('');
     const result = await getAiRecommendations(values);
     if (result.success) {
-      setRecommendation(result.recommendations ?? '');
+      setRecommendation(result.recommendations);
     } else {
       setError(result.error ?? 'Ocurrió un error inesperado.');
     }
     setIsLoading(false);
   }
+
+  const recommendedCars = recommendation?.recommendedCarIds
+    .map(id => cars.find(car => car.id === id))
+    .filter((car): car is NonNullable<typeof car> => car !== undefined) ?? [];
 
   return (
     <Card className="max-w-2xl mx-auto mb-12 shadow-lg border-2 border-primary/10">
@@ -62,7 +69,7 @@ export default function AiRecommender() {
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Input placeholder="Ej: 'un auto económico para 2 personas' o 'uno familiar para un viaje largo'" {...field} />
+                    <Input placeholder="Ej: 'económico', 'familiar', 'lujo'" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -81,13 +88,20 @@ export default function AiRecommender() {
           </form>
         </Form>
         {recommendation && (
-            <Alert className="mt-4 border-accent">
-                <Wand2 className="h-4 w-4" />
-                <AlertTitle className="font-headline text-accent">Recomendación</AlertTitle>
-                <AlertDescription>
-                    {recommendation}
-                </AlertDescription>
-            </Alert>
+            <div className="mt-6 space-y-4">
+                <Alert className="border-accent">
+                    <Wand2 className="h-4 w-4" />
+                    <AlertTitle className="font-headline text-accent">Nuestra recomendación</AlertTitle>
+                    <AlertDescription>
+                        {recommendation.reasoning}
+                    </AlertDescription>
+                </Alert>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {recommendedCars.map(car => (
+                        <CarCard key={car.id} car={car} />
+                    ))}
+                </div>
+            </div>
         )}
         {error && (
             <Alert variant="destructive" className="mt-4">

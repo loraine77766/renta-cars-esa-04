@@ -12,7 +12,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { cars } from '@/lib/cars';
 
-const carListForPrompt = cars.map(c => `- ${c.name}: ${c.description} (Características: ${c.features.join(', ')}, Precio: $${c.pricePerDay}/día)`).join('\n');
+const carListForPrompt = cars.map(c => `- ID ${c.id}: ${c.name} - ${c.description} (Características: ${c.features.join(', ')}, Precio: $${c.pricePerDay}/día)`).join('\n');
 
 const RecommendCarsInputSchema = z.object({
   preferences: z
@@ -22,9 +22,12 @@ const RecommendCarsInputSchema = z.object({
 export type RecommendCarsInput = z.infer<typeof RecommendCarsInputSchema>;
 
 const RecommendCarsOutputSchema = z.object({
-  recommendations: z
+  reasoning: z
     .string()
-    .describe('AI-powered car recommendations based on user preferences.'),
+    .describe('A brief explanation of why these specific cars were recommended.'),
+  recommendedCarIds: z
+    .array(z.number())
+    .describe('An array of car IDs that are recommended based on user preferences.'),
 });
 export type RecommendCarsOutput = z.infer<typeof RecommendCarsOutputSchema>;
 
@@ -36,9 +39,9 @@ const recommendCarsPrompt = ai.definePrompt({
   name: 'recommendCarsPrompt',
   input: {schema: RecommendCarsInputSchema},
   output: {schema: RecommendCarsOutputSchema},
-  prompt: `Eres un experto en recomendar autos de renta en Cuba. Basado en las preferencias del usuario, ofrece recomendaciones de autos de la siguiente lista. Tu recomendación debe ser concisa y mencionar uno o dos modelos específicos de la lista.
+  prompt: `Eres un experto en recomendar autos de renta en Cuba. Basado en las preferencias del usuario, recomienda uno o dos autos de la siguiente lista. Devuelve los IDs de los autos recomendados en el campo 'recommendedCarIds' y una breve explicación de tu elección en el campo 'reasoning'.
 
-Lista de autos disponibles:
+Lista de autos disponibles con sus IDs:
 ${carListForPrompt}
 
 Preferencias del usuario: {{{preferences}}}
