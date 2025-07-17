@@ -19,6 +19,9 @@ export default function Footer() {
             <Button variant="link" asChild className="p-0 h-auto">
                 <Link href="/politica-de-cookies">Política de Cookies</Link>
             </Button>
+            <Button variant="link" asChild className="p-0 h-auto">
+                <Link href="/contactanos">Contáctanos</Link>
+            </Button>
         </div>
       </div>
     </footer>

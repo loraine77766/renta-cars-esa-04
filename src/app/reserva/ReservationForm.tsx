@@ -12,6 +12,7 @@ import { es } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 
 import type { Car } from '@/lib/types';
+import { locations } from '@/lib/locations';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -19,7 +20,6 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info, Calendar as CalendarIcon } from 'lucide-react';
@@ -115,7 +115,7 @@ export default function ReservationForm({ car }: { car: Car }) {
                 <Info className="h-4 w-4 text-accent" />
                 <AlertTitle className="font-bold text-accent">Nota importante</AlertTitle>
                 <AlertDescription>
-                    Las reservas deben realizarse con al menos 24 horas de antelación.
+                    Las reservas deben realizarse con al menos 24 horas de antelación. Se pueden recoger autos en otros lugares con un cargo adicional.
                 </AlertDescription>
             </Alert>
             <Form {...form}>
@@ -130,9 +130,14 @@ export default function ReservationForm({ car }: { car: Car }) {
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Lugar de recogida *</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="Ej: Aeropuerto de La Habana" {...field} />
-                                    </FormControl>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger><SelectValue placeholder="Selecciona un lugar" /></SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {locations.map(loc => <SelectItem key={loc.id} value={`${loc.name}, ${loc.province}`}>{loc.name}, {loc.province}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -193,9 +198,14 @@ export default function ReservationForm({ car }: { car: Car }) {
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Lugar de devolución *</FormLabel>
-                                     <FormControl>
-                                        <Input placeholder="Ej: Vedado, La Habana" {...field} />
-                                    </FormControl>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger><SelectValue placeholder="Selecciona un lugar" /></SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {locations.map(loc => <SelectItem key={loc.id} value={`${loc.name}, ${loc.province}`}>{loc.name}, {loc.province}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
                                     <FormMessage />
                                 </FormItem>
                             )}
