@@ -8,7 +8,6 @@ import { es } from 'date-fns/locale';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 
 import type { Car } from '@/lib/types';
@@ -17,8 +16,12 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { CheckCircle, Info } from 'lucide-react';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { addDays } from 'date-fns';
+import { CalendarIcon } from 'lucide-react';
 
 interface ConfirmationDetailsProps {
   car: Car;
@@ -26,15 +29,19 @@ interface ConfirmationDetailsProps {
   endDate: Date;
   rentalDays: number;
   totalPrice: number;
+  pickupLocation: string;
+  dropoffLocation: string;
+  pickupTime: string;
+  dropoffTime: string;
 }
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'El nombre es requerido.' }),
   lastName1: z.string().min(2, { message: 'El primer apellido es requerido.' }),
   lastName2: z.string().optional(),
-  birthDay: z.string().min(1, { message: 'Día requerido.' }).max(2),
-  birthMonth: z.string().min(1, { message: 'Mes requerido.' }).max(2),
-  birthYear: z.string().min(4, { message: 'Año requerido.' }).max(4),
+  birthDay: z.coerce.number({invalid_type_error: "Día inválido"}).min(1, { message: 'Día inválido' }).max(31, { message: 'Día inválido' }),
+  birthMonth: z.coerce.number({invalid_type_error: "Mes inválido"}).min(1, { message: 'Mes inválido' }).max(12, { message: 'Mes inválido' }),
+  birthYear: z.coerce.number({invalid_type_error: "Año inválido"}).min(1900, { message: 'Año inválido' }),
   phone: z.string().min(5, { message: 'El teléfono es requerido.' }),
   country: z.string().min(2, { message: 'El país es requerido.' }),
   passport: z.string().min(5, { message: 'El número de pasaporte es requerido.' }),
@@ -43,28 +50,47 @@ const formSchema = z.object({
   flightNumber: z.string().optional(),
   airline: z.string().optional(),
 }).refine(data => {
-    const { birthDay, birthMonth, birthYear } = data;
-    const dateOfBirth = parse(`${birthYear}-${birthMonth}-${birthDay}`, 'yyyy-MM-dd', new Date());
-    if (isNaN(dateOfBirth.getTime())) {
-        return false; // Invalid date format, let individual field validators handle it.
+    try {
+        const dateOfBirth = parse(`${data.birthYear}-${data.birthMonth}-${data.birthDay}`, 'yyyy-MM-dd', new Date());
+        if (isNaN(dateOfBirth.getTime())) {
+            return false;
+        }
+        return differenceInYears(new Date(), dateOfBirth) >= 21;
+    } catch {
+        return false;
     }
-    return differenceInYears(new Date(), dateOfBirth) >= 21;
 }, {
     message: 'Debes tener al menos 21 años para rentar un auto.',
-    path: ['birthYear'], // Attach error to the year field for visibility
+    path: ['birthYear'],
 });
+
+const modifySchema = z.object({
+    pickupDate: z.date(),
+    dropoffDate: z.date(),
+    pickupTime: z.string(),
+    dropoffTime: z.string(),
+});
+
+const generateTimeSlots = () => {
+    const slots: string[] = [];
+    for (let i = 0; i < 24; i++) {
+        const hour = i % 12 === 0 ? 12 : i % 12;
+        const period = i < 12 ? 'AM' : 'PM';
+        slots.push(`${hour}:00 ${period}`);
+    }
+    return slots;
+};
+const hours = generateTimeSlots();
 
 
 const INSURANCE_PER_DAY = 25;
 const FUEL_COST = 59;
 
-export default function ConfirmationDetails({ car, startDate, endDate, rentalDays, totalPrice }: ConfirmationDetailsProps) {
-  const { toast } = useToast();
+export default function ConfirmationDetails({ car, startDate, endDate, rentalDays, totalPrice, pickupLocation, dropoffLocation, pickupTime, dropoffTime }: ConfirmationDetailsProps) {
   const router = useRouter();
   const [formattedDates, setFormattedDates] = useState({ start: '', end: '' });
 
   useEffect(() => {
-    // This now runs only on the client, preventing hydration mismatch.
     setFormattedDates({
         start: format(new Date(startDate), "EEE dd/MM/yyyy - HH:mm", { locale: es }),
         end: format(new Date(endDate), "EEE dd/MM/yyyy - HH:mm", { locale: es }),
@@ -77,9 +103,6 @@ export default function ConfirmationDetails({ car, startDate, endDate, rentalDay
       name: '',
       lastName1: '',
       lastName2: '',
-      birthDay: '',
-      birthMonth: '',
-      birthYear: '',
       phone: '',
       country: '',
       passport: '',
@@ -90,14 +113,54 @@ export default function ConfirmationDetails({ car, startDate, endDate, rentalDay
     },
   });
 
+  const modifyForm = useForm<z.infer<typeof modifySchema>>({
+    resolver: zodResolver(modifySchema),
+    defaultValues: {
+        pickupDate: startDate,
+        dropoffDate: endDate,
+        pickupTime: pickupTime,
+        dropoffTime: dropoffTime
+    }
+  });
+
+  function onModify(values: z.infer<typeof modifySchema>) {
+      const fromDate = format(values.pickupDate, 'yyyy-MM-dd');
+      const toDate = format(values.dropoffDate, 'yyyy-MM-dd');
+      const fromTime = values.pickupTime;
+      const toTime = values.dropoffTime;
+      router.push(`/confirmacion?carId=${car.id}&from=${fromDate}&to=${toDate}&pickupLocation=${pickupLocation}&dropoffLocation=${dropoffLocation}&pickupTime=${fromTime}&dropoffTime=${toTime}`);
+  }
+
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log('Booking confirmed for:', values);
-    toast({
-      title: '¡Renta Confirmada!',
-      description: `Gracias, ${values.name}. Hemos enviado los detalles a tu correo.`,
-      action: <CheckCircle className="text-green-500" />,
-    });
-    router.push('/');
+    const message = `
+¡Hola! Quiero confirmar mi reserva de auto:
+-----------------------------------
+*Detalles del Conductor:*
+Nombre: ${values.name} ${values.lastName1} ${values.lastName2 || ''}
+Fecha de Nacimiento: ${values.birthDay}/${values.birthMonth}/${values.birthYear}
+Teléfono: ${values.phone}
+País: ${values.country}
+Email: ${values.email}
+Pasaporte: ${values.passport}
+Licencia: ${values.driversLicense}
+Vuelo (Opcional): ${values.flightNumber || 'N/A'} - ${values.airline || 'N/A'}
+-----------------------------------
+*Resumen de la Renta:*
+Vehículo: ${car.name}
+Recogida: ${formattedDates.start} en ${pickupLocation}
+Devolución: ${formattedDates.end} en ${dropoffLocation}
+Total Días: ${rentalDays}
+-----------------------------------
+*Desglose del Pago:*
+Precio de Renta: $${(rentalDays * car.pricePerDay).toFixed(2)}
+Seguro: $${(rentalDays * INSURANCE_PER_DAY).toFixed(2)}
+Combustible: $${FUEL_COST.toFixed(2)}
+*Importe Total: $${totalPrice.toFixed(2)}*
+-----------------------------------
+¡Gracias!
+    `;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
   }
 
   const rentPrice = rentalDays * car.pricePerDay;
@@ -131,15 +194,16 @@ export default function ConfirmationDetails({ car, startDate, endDate, rentalDay
                                         <FormLabel>Fecha de nacimiento *</FormLabel>
                                         <div className="flex gap-2">
                                             <FormField control={form.control} name="birthDay" render={({ field }) => (
-                                                <FormItem className="flex-1"><FormControl><Input placeholder="Día" {...field} /></FormControl><FormMessage /></FormItem>
+                                                <FormItem className="flex-1"><FormControl><Input placeholder="Día" type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))} /></FormControl><FormMessage /></FormItem>
                                             )}/>
                                             <FormField control={form.control} name="birthMonth" render={({ field }) => (
-                                                <FormItem className="flex-1"><FormControl><Input placeholder="Mes" {...field} /></FormControl><FormMessage /></FormItem>
+                                                <FormItem className="flex-1"><FormControl><Input placeholder="Mes" type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))} /></FormControl><FormMessage /></FormItem>
                                             )}/>
                                             <FormField control={form.control} name="birthYear" render={({ field }) => (
-                                                <FormItem className="flex-1"><FormControl><Input placeholder="Año" {...field} /></FormControl><FormMessage /></FormItem>
+                                                <FormItem className="flex-1"><FormControl><Input placeholder="Año" type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))} /></FormControl><FormMessage /></FormItem>
                                             )}/>
                                         </div>
+                                         <FormMessage>{form.formState.errors.birthYear?.message}</FormMessage>
                                     </FormItem>
                                     <FormField control={form.control} name="phone" render={({ field }) => (
                                         <FormItem><FormLabel>Teléfono *</FormLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormItem>
@@ -168,7 +232,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, rentalDay
                                     )}/>
                                 </div>
                                 <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-lg py-6">
-                                    Confirmar y Rentar
+                                    Confirmar y Rentar por WhatsApp
                                 </Button>
                             </form>
                         </Form>
@@ -192,13 +256,13 @@ export default function ConfirmationDetails({ car, startDate, endDate, rentalDay
                             <TableRow><TableCell className="font-semibold p-1">Categoría:</TableCell><TableCell className="p-1">{car.features.includes('Automático') ? 'Economico Automático' : 'Economico Manual'}</TableCell></TableRow>
                             <TableRow><TableCell className="font-semibold p-1">Total días:</TableCell><TableCell className="p-1">{rentalDays}</TableCell></TableRow>
                             <TableRow><TableCell className="font-semibold p-1">Precio diario:</TableCell><TableCell className="p-1">${car.pricePerDay.toFixed(2)}</TableCell></TableRow>
-                            <TableRow>
+                             <TableRow>
                                 <TableCell className="font-semibold p-1 align-top">Recogida:</TableCell>
-                                <TableCell className="p-1">{formattedDates.start || '...'}</TableCell>
+                                <TableCell className="p-1">{formattedDates.start || '...'} <br/> <span className="text-sm text-muted-foreground">{pickupLocation}</span></TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell className="font-semibold p-1 align-top">Devolución:</TableCell>
-                                <TableCell className="p-1">{formattedDates.end || '...'}</TableCell>
+                                <TableCell className="p-1">{formattedDates.end || '...'} <br/> <span className="text-sm text-muted-foreground">{dropoffLocation}</span></TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>
@@ -221,7 +285,86 @@ export default function ConfirmationDetails({ car, startDate, endDate, rentalDay
                         <span className="font-mono">${totalPrice.toFixed(2)}</span>
                     </div>
 
-                    <Button variant="outline" className="w-full mt-4">Modificar Reserva</Button>
+                    <Dialog>
+                        <DialogTrigger asChild>
+                             <Button variant="outline" className="w-full mt-4">Modificar Reserva</Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Modificar reserva</DialogTitle>
+                            </DialogHeader>
+                            <p className="text-sm text-muted-foreground">Importante: 21 años es la edad mínima permitida para rentar un auto en Cuba. Las reservas deben realizarse con al menos 24 horas de antelación.</p>
+                            <Form {...modifyForm}>
+                                <form onSubmit={modifyForm.handleSubmit(onModify)} className="space-y-4">
+                                     <FormField
+                                        control={modifyForm.control}
+                                        name="pickupDate"
+                                        render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Fecha de recogida</FormLabel>
+                                            <Popover>
+                                            <PopoverTrigger asChild>
+                                                <FormControl>
+                                                <Button variant={"outline"} className="w-full pl-3 text-left font-normal">
+                                                    {field.value ? (format(field.value, "PPP", { locale: es })) : (<span>Elige una fecha</span>)}
+                                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                </Button>
+                                                </FormControl>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={field.value}
+                                                    onSelect={field.onChange}
+                                                    disabled={(date) => date < addDays(new Date(), 1)}
+                                                    initialFocus
+                                                />
+                                            </PopoverContent>
+                                            </Popover>
+                                            <FormMessage />
+                                        </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={modifyForm.control}
+                                        name="dropoffDate"
+                                        render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Fecha de devolución</FormLabel>
+                                            <Popover>
+                                            <PopoverTrigger asChild>
+                                                <FormControl>
+                                                <Button variant={"outline"} className="w-full pl-3 text-left font-normal">
+                                                    {field.value ? (format(field.value, "PPP", { locale: es })) : (<span>Elige una fecha</span>)}
+                                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                </Button>
+                                                </FormControl>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={field.value}
+                                                    onSelect={field.onChange}
+                                                    disabled={(date) => !modifyForm.watch('pickupDate') || date < modifyForm.watch('pickupDate')}
+                                                    initialFocus
+                                                />
+                                            </PopoverContent>
+                                            </Popover>
+                                            <FormMessage />
+                                        </FormItem>
+                                        )}
+                                    />
+                                    <DialogFooter>
+                                        <DialogClose asChild>
+                                            <Button type="button" variant="ghost">Cancelar</Button>
+                                        </DialogClose>
+                                        <Button type="submit">Guardar Cambios</Button>
+                                    </DialogFooter>
+                                </form>
+                            </Form>
+                        </DialogContent>
+                    </Dialog>
+
                 </CardContent>
             </Card>
 
@@ -229,3 +372,5 @@ export default function ConfirmationDetails({ car, startDate, endDate, rentalDay
     </div>
   );
 }
+
+    

@@ -11,13 +11,17 @@ type ConfirmationPageProps = {
     carId?: string;
     from?: string;
     to?: string;
+    pickupLocation?: string;
+    dropoffLocation?: string;
+    pickupTime?: string;
+    dropoffTime?: string;
   };
 };
 
 export default function ConfirmationPage({ searchParams }: ConfirmationPageProps) {
-  const { carId, from, to } = searchParams;
+  const { carId, from, to, pickupLocation, dropoffLocation, pickupTime, dropoffTime } = searchParams;
 
-  if (!carId || !from || !to) {
+  if (!carId || !from || !to || !pickupLocation || !dropoffLocation || !pickupTime || !dropoffTime) {
     redirect('/');
   }
 
@@ -35,7 +39,10 @@ export default function ConfirmationPage({ searchParams }: ConfirmationPageProps
   }
   
   const rentalDays = differenceInCalendarDays(endDate, startDate) + 1;
-  const totalPrice = rentalDays * car.pricePerDay;
+  
+  const INSURANCE_PER_DAY = 25;
+  const FUEL_COST = 59;
+  const totalPrice = (rentalDays * car.pricePerDay) + (rentalDays * INSURANCE_PER_DAY) + FUEL_COST;
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -47,9 +54,15 @@ export default function ConfirmationPage({ searchParams }: ConfirmationPageProps
           endDate={endDate}
           rentalDays={rentalDays}
           totalPrice={totalPrice}
+          pickupLocation={pickupLocation}
+          dropoffLocation={dropoffLocation}
+          pickupTime={pickupTime}
+          dropoffTime={dropoffTime}
         />
       </main>
       <Footer />
     </div>
   );
 }
+
+    
