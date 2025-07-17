@@ -168,8 +168,6 @@ export default function ConfirmationDetails({ car, startDate, endDate, rentalDay
                         </Form>
                     </CardContent>
                 </Card>
-
-                 {car.details && <RentalInfo details={car.details} />}
             </div>
             
             <Card className="shadow-lg lg:sticky lg:top-8 h-fit">
@@ -225,4 +223,3 @@ export default function ConfirmationDetails({ car, startDate, endDate, rentalDay
     </div>
   );
 }
-

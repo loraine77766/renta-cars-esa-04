@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -21,6 +22,7 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info, Calendar as CalendarIcon } from 'lucide-react';
+import RentalInfo from '../confirmacion/RentalInfo';
 
 const generateTimeSlots = () => {
     const slots: string[] = [];
@@ -255,6 +257,7 @@ export default function ReservationForm({ car }: { car: Car }) {
             </Form>
           </CardContent>
         </Card>
+         {car.details && <RentalInfo details={car.details} />}
       </div>
 
       <div className="space-y-8 lg:sticky lg:top-8 h-fit">
