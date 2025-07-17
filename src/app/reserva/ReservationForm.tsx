@@ -22,14 +22,23 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info, Calendar as CalendarIcon } from 'lucide-react';
 
-const offices = ["Aeropuerto de La Habana", "Vedado, La Habana", "Aeropuerto de Varadero", "Varadero Centro"];
-const hours = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
+const generateTimeSlots = () => {
+    const slots: string[] = [];
+    for (let i = 0; i < 24; i++) {
+        const hour = i % 12 === 0 ? 12 : i % 12;
+        const period = i < 12 ? 'AM' : 'PM';
+        slots.push(`${hour}:00 ${period}`);
+    }
+    return slots;
+};
+const hours = generateTimeSlots();
+
 
 const formSchema = z.object({
-  pickupOffice: z.string().min(1, 'Selecciona una oficina de recogida.'),
+  pickupLocation: z.string().min(1, 'El lugar de recogida es obligatorio.'),
   pickupDate: z.date({ required_error: 'La fecha de recogida es obligatoria.' }),
   pickupTime: z.string().min(1, 'La hora de recogida es obligatoria.'),
-  dropoffOffice: z.string().min(1, 'Selecciona una oficina de devolución.'),
+  dropoffLocation: z.string().min(1, 'El lugar de devolución es obligatorio.'),
   dropoffDate: z.date({ required_error: 'La fecha de devolución es obligatoria.' }),
   dropoffTime: z.string().min(1, 'La hora de devolución es obligatoria.'),
 }).refine(data => {
@@ -49,10 +58,10 @@ export default function ReservationForm({ car }: { car: Car }) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      pickupOffice: '',
-      pickupTime: '10:00',
-      dropoffOffice: '',
-      dropoffTime: '10:00',
+      pickupLocation: '',
+      pickupTime: '10:00 AM',
+      dropoffLocation: '',
+      dropoffTime: '10:00 AM',
     }
   });
 
@@ -114,18 +123,13 @@ export default function ReservationForm({ car }: { car: Car }) {
                         <h3 className="font-headline font-semibold text-primary">Recogida</h3>
                          <FormField
                             control={form.control}
-                            name="pickupOffice"
+                            name="pickupLocation"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Oficina de recogida *</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                        <FormControl>
-                                            <SelectTrigger><SelectValue placeholder="Selecciona una oficina" /></SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            {offices.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
+                                    <FormLabel>Lugar de recogida *</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="Ej: Aeropuerto de La Habana" {...field} />
+                                    </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -168,7 +172,7 @@ export default function ReservationForm({ car }: { car: Car }) {
                                         <FormLabel>Hora</FormLabel>
                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                                             <FormControl>
-                                                <SelectTrigger className="w-[100px]"><SelectValue /></SelectTrigger>
+                                                <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
                                             </FormControl>
                                             <SelectContent>{hours.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
                                         </Select>
@@ -182,18 +186,13 @@ export default function ReservationForm({ car }: { car: Car }) {
                         <h3 className="font-headline font-semibold text-primary">Devolución</h3>
                         <FormField
                             control={form.control}
-                            name="dropoffOffice"
+                            name="dropoffLocation"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Oficina de devolución *</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                        <FormControl>
-                                            <SelectTrigger><SelectValue placeholder="Selecciona una oficina" /></SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            {offices.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
+                                    <FormLabel>Lugar de devolución *</FormLabel>
+                                     <FormControl>
+                                        <Input placeholder="Ej: Vedado, La Habana" {...field} />
+                                    </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -236,7 +235,7 @@ export default function ReservationForm({ car }: { car: Car }) {
                                         <FormLabel>Hora</FormLabel>
                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                                             <FormControl>
-                                                <SelectTrigger className="w-[100px]"><SelectValue /></SelectTrigger>
+                                                <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
                                             </FormControl>
                                             <SelectContent>{hours.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
                                         </Select>
