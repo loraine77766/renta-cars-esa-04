@@ -10,6 +10,11 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
 export default function Home() {
+  const sortedCars = [...cars].sort((a, b) => a.pricePerDay - b.pricePerDay);
+  const cheapestCar = sortedCars[0];
+  const midPriceCars = sortedCars.filter(c => c.pricePerDay > cheapestCar.pricePerDay).slice(0, 2);
+  const recommendedCars = [cheapestCar, ...midPriceCars].filter(Boolean);
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -29,6 +34,11 @@ export default function Home() {
                   Ver Autos Disponibles
                 </Link>
             </Button>
+        </section>
+
+        <section id="cars" className="my-16">
+          <h2 className="font-headline text-3xl font-bold text-center mb-8 text-primary">Autos Recomendados</h2>
+          <CarList cars={recommendedCars} />
         </section>
 
         <section className="my-16 py-12 bg-secondary/50 rounded-lg">
