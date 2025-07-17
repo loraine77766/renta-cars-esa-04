@@ -159,7 +159,7 @@ Combustible: $${FUEL_COST.toFixed(2)}
 -----------------------------------
 ¡Gracias!
     `;
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = `https://wa.me/1825609725?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   }
 
@@ -372,5 +372,3 @@ Combustible: $${FUEL_COST.toFixed(2)}
     </div>
   );
 }
-
-    
