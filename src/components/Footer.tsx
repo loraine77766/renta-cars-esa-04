@@ -13,6 +13,9 @@ export default function Footer() {
             <Button variant="link" asChild className="p-0 h-auto">
                 <Link href="/terminos-y-condiciones">Términos y Condiciones</Link>
             </Button>
+             <Button variant="link" asChild className="p-0 h-auto">
+                <Link href="/politica-de-privacidad">Política de Privacidad</Link>
+            </Button>
         </div>
       </div>
     </footer>
