@@ -1,3 +1,4 @@
+
 import type { Car } from './types';
 
 export const cars: Car[] = [
@@ -69,7 +70,7 @@ export const cars: Car[] = [
         'Tasa de Aeropuerto.'
       ],
       pickupAndDropoff: [
-        'Si su hora de DEVOLUCIÓN es más de 4 horas después de su hora de RECOGIDA, se cargará 1 día adicional automáticamente. Asegúrese de entregar el auto a la hora establecida.'
+        'Si su hora de DEVOLUCIÓN al momento de reservar es más de 4 horas que su hora de RECOGIDA el sistema cargara 1 día adicional a su reserva automáticamente. Asegúrese de entregar el auto a la hora establecida.'
       ],
       notes: [
         'A conductores entre 21-24 años y 75-80 años de edad se le incrementará el costo del seguro en un 50%.',

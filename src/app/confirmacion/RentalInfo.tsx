@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,14 +51,14 @@ export default function RentalInfo({ details }: RentalInfoProps) {
                 />
 
                 <InfoSection 
-                    title="Horarios de Recogida/Entrega"
+                    title="Hora de Recogida y Entrega"
                     items={details.pickupAndDropoff}
                     icon={<Clock size={16}/>}
                     iconClass="text-orange-500"
                 />
 
                 <InfoSection 
-                    title="Notas Adicionales" 
+                    title="Informaciones" 
                     items={details.notes}
                     icon={<Info size={16}/>}
                     iconClass="text-gray-500"
@@ -66,3 +67,4 @@ export default function RentalInfo({ details }: RentalInfoProps) {
         </Card>
     )
 }
+

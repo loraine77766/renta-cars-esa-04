@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -11,13 +12,17 @@ import { useRouter } from 'next/navigation';
 
 import type { Car } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Info } from 'lucide-react';
 import RentalInfo from './RentalInfo';
+import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarIcon } from 'lucide-react';
 
 interface ConfirmationDetailsProps {
   car: Car;
@@ -29,16 +34,39 @@ interface ConfirmationDetailsProps {
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'El nombre es requerido.' }),
+  lastName1: z.string().min(2, { message: 'El primer apellido es requerido.' }),
+  lastName2: z.string().optional(),
+  birthDate: z.date({ required_error: 'La fecha de nacimiento es obligatoria.' }),
+  phone: z.string().min(5, { message: 'El teléfono es requerido.' }),
+  country: z.string().min(2, { message: 'El país es requerido.' }),
+  passport: z.string().min(5, { message: 'El número de pasaporte es requerido.' }),
+  driversLicense: z.string().min(5, { message: 'El número de licencia es requerido.' }),
   email: z.string().email({ message: 'El correo electrónico no es válido.' }),
+  flightNumber: z.string().optional(),
+  airline: z.string().optional(),
 });
+
+const INSURANCE_PER_DAY = 25;
+const FUEL_COST = 59;
 
 export default function ConfirmationDetails({ car, startDate, endDate, rentalDays, totalPrice }: ConfirmationDetailsProps) {
   const { toast } = useToast();
   const router = useRouter();
-
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: '', email: '' },
+    defaultValues: {
+      name: '',
+      lastName1: '',
+      lastName2: '',
+      phone: '',
+      country: '',
+      passport: '',
+      driversLicense: '',
+      email: '',
+      flightNumber: '',
+      airline: '',
+    },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
@@ -51,6 +79,9 @@ export default function ConfirmationDetails({ car, startDate, endDate, rentalDay
     router.push('/');
   }
 
+  const rentPrice = rentalDays * car.pricePerDay;
+  const insurancePrice = rentalDays * INSURANCE_PER_DAY;
+  
   return (
     <div>
         <h1 className="font-headline text-3xl md:text-4xl font-bold text-primary mb-4 text-center">Confirma tu Renta</h1>
@@ -60,38 +91,76 @@ export default function ConfirmationDetails({ car, startDate, endDate, rentalDay
             <div className="lg:col-span-2 space-y-8">
                 <Card className="shadow-lg">
                     <CardHeader>
-                        <CardTitle className="font-headline text-2xl text-primary">Tus Datos</CardTitle>
-                        <CardDescription>Completa el formulario para finalizar la reserva.</CardDescription>
+                        <CardTitle className="font-headline text-2xl text-primary">1. Datos del Conductor</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <Form {...form}>
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                                <FormField
-                                    control={form.control}
-                                    name="name"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Nombre completo</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="Tu nombre y apellidos" {...field} />
-                                            </FormControl>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <FormField control={form.control} name="name" render={({ field }) => (
+                                        <FormItem><FormLabel>Nombre *</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                    )}/>
+                                    <FormField control={form.control} name="lastName1" render={({ field }) => (
+                                        <FormItem><FormLabel>1. Apellido *</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                    )}/>
+                                    <FormField control={form.control} name="lastName2" render={({ field }) => (
+                                        <FormItem><FormLabel>2. Apellido</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                    )}/>
+                                     <FormField
+                                        control={form.control}
+                                        name="birthDate"
+                                        render={({ field }) => (
+                                        <FormItem className="flex flex-col">
+                                            <FormLabel>Fecha de nacimiento *</FormLabel>
+                                            <Popover>
+                                            <PopoverTrigger asChild>
+                                                <FormControl>
+                                                <Button variant={"outline"} className="pl-3 text-left font-normal">
+                                                    {field.value ? (format(field.value, "PPP", { locale: es })) : (<span>Elige una fecha</span>)}
+                                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                </Button>
+                                                </FormControl>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={field.value}
+                                                    onSelect={field.onChange}
+                                                    disabled={(date) => date > new Date() || date < new Date("1920-01-01")}
+                                                    initialFocus
+                                                />
+                                            </PopoverContent>
+                                            </Popover>
                                             <FormMessage />
                                         </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="email"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Correo electrónico</FormLabel>
-                                            <FormControl>
-                                                <Input type="email" placeholder="tu@correo.com" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                        )}
+                                    />
+                                    <FormField control={form.control} name="phone" render={({ field }) => (
+                                        <FormItem><FormLabel>Teléfono *</FormLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormItem>
+                                    )}/>
+                                    <FormField control={form.control} name="country" render={({ field }) => (
+                                        <FormItem><FormLabel>País</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                    )}/>
+                                    <FormField control={form.control} name="passport" render={({ field }) => (
+                                        <FormItem><FormLabel>Pasaporte *</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                    )}/>
+                                    <FormField control={form.control} name="driversLicense" render={({ field }) => (
+                                        <FormItem><FormLabel>Licencia de conducir *</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                    )}/>
+                                    <FormField control={form.control} name="email" render={({ field }) => (
+                                        <FormItem className="md:col-span-2"><FormLabel>Correo electrónico *</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
+                                    )}/>
+                                </div>
+                                <Separator />
+                                <h3 className="font-headline text-xl text-primary">Datos de Vuelo (Opcional)</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                     <FormField control={form.control} name="flightNumber" render={({ field }) => (
+                                        <FormItem><FormLabel>Número de vuelo</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                    )}/>
+                                     <FormField control={form.control} name="airline" render={({ field }) => (
+                                        <FormItem><FormLabel>Compañía aérea</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                    )}/>
+                                </div>
                                 <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-lg py-6">
                                     Confirmar y Rentar
                                 </Button>
@@ -111,30 +180,44 @@ export default function ConfirmationDetails({ car, startDate, endDate, rentalDay
                     <div className="relative h-40 w-full rounded-lg overflow-hidden mb-4">
                         <Image src={car.imageUrl} alt={car.name} data-ai-hint={car.imageHint} fill className="object-cover" />
                     </div>
-                    <h3 className="font-headline text-xl font-semibold text-primary">{car.name}</h3>
-                    <div className="flex flex-wrap gap-2 my-2">
-                        {car.features.map(f => <Badge key={f} variant="secondary">{f}</Badge>)}
-                    </div>
+                    
+                    <h3 className="font-headline text-xl font-semibold text-primary">Reserva elegida</h3>
+                    <Table>
+                        <TableBody>
+                            <TableRow><TableCell className="font-semibold p-1">Vehículo:</TableCell><TableCell className="p-1">{car.name}</TableCell></TableRow>
+                            <TableRow><TableCell className="font-semibold p-1">Categoría:</TableCell><TableCell className="p-1">{car.features.includes('Automático') ? 'Economico Automático' : 'Economico Manual'}</TableCell></TableRow>
+                            <TableRow><TableCell className="font-semibold p-1">Total días:</TableCell><TableCell className="p-1">{rentalDays}</TableCell></TableRow>
+                            <TableRow><TableCell className="font-semibold p-1">Precio diario:</TableCell><TableCell className="p-1">${car.pricePerDay.toFixed(2)}</TableCell></TableRow>
+                            <TableRow>
+                                <TableCell className="font-semibold p-1 align-top">Recogida:</TableCell>
+                                <TableCell className="p-1">{format(startDate, "EEE dd/MM/yyyy - HH:mm", { locale: es })}</TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell className="font-semibold p-1 align-top">Devolución:</TableCell>
+                                <TableCell className="p-1">{format(endDate, "EEE dd/MM/yyyy - HH:mm", { locale: es })}</TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                    
                     <Separator className="my-4" />
-                    <div className="space-y-3 text-sm">
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Recogida:</span>
-                            <span className="font-semibold">{format(startDate, "PPP", { locale: es })}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Devolución:</span>
-                            <span className="font-semibold">{format(endDate, "PPP", { locale: es })}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Total de días:</span>
-                            <span className="font-semibold">{rentalDays}</span>
-                        </div>
-                    </div>
+                    
+                    <h3 className="font-headline text-xl font-semibold text-primary">Importe a pagar ({rentalDays} x Renta)</h3>
+                     <Table>
+                        <TableBody>
+                            <TableRow><TableCell className="text-muted-foreground p-1">Precio diario</TableCell><TableCell className="text-right p-1 font-mono">${car.pricePerDay.toFixed(2)}</TableCell></TableRow>
+                            <TableRow><TableCell className="text-muted-foreground p-1">Precio de Renta</TableCell><TableCell className="text-right p-1 font-mono">${rentPrice.toFixed(2)}</TableCell></TableRow>
+                            <TableRow><TableCell className="text-muted-foreground p-1">Seguro</TableCell><TableCell className="text-right p-1 font-mono">${insurancePrice.toFixed(2)}</TableCell></TableRow>
+                            <TableRow><TableCell className="text-muted-foreground p-1">Combustible</TableCell><TableCell className="text-right p-1 font-mono">${FUEL_COST.toFixed(2)}</TableCell></TableRow>
+                        </TableBody>
+                    </Table>
+
                     <Separator className="my-4" />
                     <div className="flex justify-between items-center text-2xl font-bold text-primary">
-                        <span className="font-headline">Precio Total:</span>
-                        <span>${totalPrice}</span>
+                        <span className="font-headline">Importe Total:</span>
+                        <span className="font-mono">${totalPrice.toFixed(2)}</span>
                     </div>
+
+                    <Button variant="outline" className="w-full mt-4">Modificar Reserva</Button>
                 </CardContent>
             </Card>
 
@@ -142,3 +225,4 @@ export default function ConfirmationDetails({ car, startDate, endDate, rentalDay
     </div>
   );
 }
+
