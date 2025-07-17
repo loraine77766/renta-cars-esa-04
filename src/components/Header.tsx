@@ -13,6 +13,12 @@ export default function Header() {
           </Link>
           <nav className="flex items-center gap-2">
              <Button variant="ghost" asChild>
+                <Link href="/" className="flex items-center gap-2">
+                    <CarFront className="h-4 w-4" />
+                    <span>Inicio</span>
+                </Link>
+            </Button>
+             <Button variant="ghost" asChild>
                 <Link href="/#cars" className="flex items-center gap-2">
                     <CarFront className="h-4 w-4" />
                     <span>Autos</span>
