@@ -6,6 +6,8 @@ import { CarList } from '@/components/CarList';
 import { cars } from '@/lib/cars';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MessageSquare, Clock, ShieldCheck, Info, Map, ListChecks } from 'lucide-react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 export default function Home() {
   return (
@@ -22,13 +24,11 @@ export default function Home() {
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Encuentra el auto perfecto para tu viaje. Fácil, rápido y confiable.
           </p>
-        </section>
-
-        <AiRecommender />
-
-        <section id="cars" className="my-12">
-          <h2 className="font-headline text-3xl font-bold text-center mb-8 text-primary">Nuestra Flota</h2>
-          <CarList cars={cars} />
+           <Button asChild className="mt-6 bg-accent hover:bg-accent/90">
+                <Link href="/autos">
+                  Ver Autos Disponibles
+                </Link>
+            </Button>
         </section>
 
         <section className="my-16 py-12 bg-secondary/50 rounded-lg">
