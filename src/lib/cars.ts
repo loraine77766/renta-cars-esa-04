@@ -114,7 +114,7 @@ export const cars: Car[] = [
     name: 'Hyundai Accent',
     description: 'Un sedán confiable y eficiente, ideal para familias y viajes largos.',
     pricePerDay: 90,
-    imageUrl: 'https://placehold.co/600x400.png',
+    imageUrl: '/images/images/Hyundai Accent.jpg',
     imageHint: 'sedan silver',
     features: ['4 Puertas', '5 Pasajeros', 'Mecánico', 'Gasolina', 'Clima', 'Maletero', 'Seguro incluido'],
     details: {
