@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { Car, LifeBuoy, CarFront, HelpCircle, Menu, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
