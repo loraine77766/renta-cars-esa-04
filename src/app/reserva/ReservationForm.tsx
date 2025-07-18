@@ -148,6 +148,7 @@ export default function ReservationForm({ car }: { car: Car }) {
                                             <SelectTrigger><SelectValue placeholder="Selecciona un lugar" /></SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
+                                            <SelectItem value="Lugar Personalizado (costo extra)">Lugar Personalizado (costo extra)</SelectItem>
                                             {locations.map(loc => <SelectItem key={loc.id} value={`${loc.name}, ${loc.province}`}>{loc.name}, {loc.province}</SelectItem>)}
                                         </SelectContent>
                                     </Select>
@@ -216,6 +217,7 @@ export default function ReservationForm({ car }: { car: Car }) {
                                             <SelectTrigger><SelectValue placeholder="Selecciona un lugar" /></SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
+                                            <SelectItem value="Lugar Personalizado (costo extra)">Lugar Personalizado (costo extra)</SelectItem>
                                             {locations.map(loc => <SelectItem key={loc.id} value={`${loc.name}, ${loc.province}`}>{loc.name}, {loc.province}</SelectItem>)}
                                         </SelectContent>
                                     </Select>
