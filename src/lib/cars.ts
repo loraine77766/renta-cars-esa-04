@@ -8,14 +8,14 @@ export const cars: Car[] = [
     description: 'Pequeño, ágil y fácil de estacionar. La mejor opción para moverse por calles estrechas.',
     pricePerDay: 50,
     originalPricePerDay: 57,
-    imageUrl: '/images/kia-picanto2.jpg',
+    imageUrl: '/images/images/kia-picanto2.jpg',
     imageUrls: [
-      '/images/kia-picanto2.jpg',
-      '/images/kia-picanto1.jpg',
-      '/images/kia-picanto3.jpg',
-      '/images/kia-picanto4.jpg',
-      '/images/kia-picanto5.jpg',
-      '/images/kia-picanto6.jpg'
+      '/images/images/kia-picanto2.jpg',
+      '/images/images/kia-picanto1.jpg',
+      '/images/images/kia-picanto3.jpg',
+      '/images/images/kia-picanto4.jpg',
+      '/images/images/kia-picanto5.jpg',
+      '/images/images/kia-picanto6.jpg'
     ],
     imageHint: 'hatchback blue',
     features: ['4 Puertas', '4 Pasajeros', 'Automático', 'Gasolina', 'Clima', 'Maletero', 'Seguro incluido'],
@@ -49,7 +49,7 @@ export const cars: Car[] = [
     description: 'Un sedán moderno y espacioso, ideal para viajes cómodos en carretera.',
     pricePerDay: 100,
     originalPricePerDay: 110,
-    imageUrl: '/images/Dongfeng Aeolus Yixuan.jpg',
+    imageUrl: '/images/images/Dongfeng Aeolus Yixuan.png',
     imageHint: 'sedan white',
     features: ['4 Puertas', '5 Pasajeros', 'Automático', 'Gasolina', 'Clima', 'Maletero', 'Seguro incluido'],
     details: {
