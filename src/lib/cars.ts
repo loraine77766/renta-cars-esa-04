@@ -53,10 +53,10 @@ export const cars: Car[] = [
     description: 'Pequeño, ágil y fácil de estacionar. La mejor opción para moverse por calles estrechas.',
     pricePerDay: 50,
     originalPricePerDay: 57,
-    imageUrl: '/images/images/kia-picanto1.jpg',
+    imageUrl: '/images/images/kia-picanto2.jpg',
     imageUrls: [
-      '/images/images/kia-picanto1.jpg',
       '/images/images/kia-picanto2.jpg',
+      '/images/images/kia-picanto1.jpg',
       '/images/images/kia-picanto3.jpg',
       '/images/images/kia-picanto4.jpg',
       '/images/images/kia-picanto5.jpg',
