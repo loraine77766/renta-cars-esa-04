@@ -84,7 +84,7 @@ export const cars: Car[] = [
     originalPricePerDay: 90,
     imageUrl: 'https://placehold.co/600x400.png',
     imageHint: 'hatchback silver',
-    features: ['4 Puertas', '5 Pasajeros', 'Automático', 'Gasolina', 'Clima', 'Maletero', 'Seguro incluido'],
+    features: ['4 Puertas', '4 Pasajeros', 'Mecánico', 'Gasolina', 'Clima', 'Maletero', 'Seguro incluido'],
     details: {
       additionalCharges: [
         'Los cargos adicionales son abonados directamente a la compañía rentadora mediante tarjeta en el momento a la apertura del contrato. No se admitirán pagos en efectivo.'
