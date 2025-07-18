@@ -82,7 +82,7 @@ export const cars: Car[] = [
     description: 'Un auto compacto y confiable, perfecto para la ciudad y viajes cortos.',
     pricePerDay: 80,
     originalPricePerDay: 90,
-    imageUrl: 'https://placehold.co/600x400.png',
+    imageUrl: '/images/Hyundai Grand I10.jpg',
     imageHint: 'hatchback silver',
     features: ['4 Puertas', '4 Pasajeros', 'Mecánico', 'Gasolina', 'Clima', 'Maletero', 'Seguro incluido'],
     details: {
