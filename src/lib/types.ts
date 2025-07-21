@@ -22,3 +22,12 @@ export type SavedRental = {
   startDate: string;
   endDate: string;
 };
+
+export type ReservationDetails = {
+    rentalDays: number;
+    rentPrice: number;
+    deposit: number;
+    totalWithDiscount: number;
+    totalWithoutDiscount: number;
+    discountAmount: number;
+};

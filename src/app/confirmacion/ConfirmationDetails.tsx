@@ -11,7 +11,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import type { Car } from '@/lib/types';
+import type { Car, ReservationDetails } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -35,12 +35,11 @@ interface ConfirmationDetailsProps {
   car: Car;
   startDate: Date;
   endDate: Date;
-  rentalDays: number;
-  totalPrice: number;
   pickupLocation: string;
   dropoffLocation: string;
   pickupTime: string;
   dropoffTime: string;
+  reservationDetails: ReservationDetails;
 }
 
 const formSchema = z.object({
@@ -57,6 +56,7 @@ const formSchema = z.object({
   email: z.string().email({ message: 'El correo electrónico no es válido.' }),
   flightNumber: z.string().optional(),
   airline: z.string().optional(),
+  paymentOption: z.enum(['deposit', 'full_payment']),
 }).refine(data => {
     try {
         const dateOfBirth = parse(`${data.birthYear}-${data.birthMonth}-${data.birthDay}`, 'yyyy-MM-dd', new Date());
@@ -95,10 +95,7 @@ const generateTimeSlots = () => {
 const hours = generateTimeSlots();
 
 
-const INSURANCE_PER_DAY = 25;
-const FUEL_COST = 59;
-
-export default function ConfirmationDetails({ car, startDate, endDate, rentalDays, totalPrice, pickupLocation, dropoffLocation, pickupTime, dropoffTime }: ConfirmationDetailsProps) {
+export default function ConfirmationDetails({ car, startDate, endDate, pickupLocation, dropoffLocation, pickupTime, dropoffTime, reservationDetails }: ConfirmationDetailsProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [formattedDates, setFormattedDates] = useState({ start: '', end: '' });
@@ -144,8 +141,14 @@ export default function ConfirmationDetails({ car, startDate, endDate, rentalDay
       email: '',
       flightNumber: '',
       airline: '',
+      paymentOption: 'deposit',
     },
   });
+  
+  const paymentOption = form.watch('paymentOption');
+  const amountToPay = paymentOption === 'full_payment' ? reservationDetails.totalWithDiscount : reservationDetails.deposit;
+  const paymentConcept = paymentOption === 'full_payment' ? `Pago Completo (con 20% de descuento)` : `Depósito de Reserva`;
+
 
   const modifyForm = useForm<z.infer<typeof modifySchema>>({
     resolver: zodResolver(modifySchema),
@@ -190,13 +193,16 @@ Vuelo (Opcional): ${values.flightNumber || 'N/A'} - ${values.airline || 'N/A'}
 Vehículo: ${car.name}
 Recogida: ${formattedDates.start} en ${pickupLocation}
 Devolución: ${formattedDates.end} en ${dropoffLocation}
-Total Días: ${rentalDays}
+Total Días: ${reservationDetails.rentalDays}
 -----------------------------------
-*Desglose del Pago:*
-Precio de Renta: $${(rentalDays * car.pricePerDay).toFixed(2)}
-Seguro: $${(rentalDays * INSURANCE_PER_DAY).toFixed(2)}
-Combustible: $${FUEL_COST.toFixed(2)}
-*Importe Total: $${totalPrice.toFixed(2)}*
+*Opción de Pago Seleccionada:*
+${paymentConcept}: $${amountToPay.toFixed(2)}
+-----------------------------------
+*Desglose del Costo Total:*
+Costo de Renta: $${reservationDetails.rentPrice.toFixed(2)}
+Depósito Reembolsable: $${reservationDetails.deposit.toFixed(2)}
+Total sin descuento: $${reservationDetails.totalWithoutDiscount.toFixed(2)}
+Total con 20% descuento (pago adelantado): $${reservationDetails.totalWithDiscount.toFixed(2)}
 -----------------------------------
 ¡Gracias!
     `;
@@ -205,13 +211,10 @@ Combustible: $${FUEL_COST.toFixed(2)}
     setIsConfirmationDialogOpen(true);
   }
 
-  const rentPrice = rentalDays * car.pricePerDay;
-  const insurancePrice = rentalDays * INSURANCE_PER_DAY;
-  
   return (
     <div>
         <h1 className="font-headline text-3xl md:text-4xl font-bold text-primary mb-4 text-center">Confirma tu Renta</h1>
-        <p className="text-center text-muted-foreground mb-8">Estás a un paso de asegurar tu vehículo. Por favor, revisa los detalles y completa tu información.</p>
+        <p className="text-center text-muted-foreground mb-8">Estás a un paso de asegurar tu vehículo. Por favor, revisa los detalles, completa tu información y elige tu opción de pago.</p>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             <div className="lg:col-span-2 space-y-8">
@@ -273,11 +276,46 @@ Combustible: $${FUEL_COST.toFixed(2)}
                                         <FormItem><FormLabel>Compañía aérea</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                                     )}/>
                                 </div>
+                                
+                                <Separator />
+                                <h3 className="font-headline text-xl text-primary">2. Opción de Pago</h3>
+                                 <FormField
+                                    control={form.control}
+                                    name="paymentOption"
+                                    render={({ field }) => (
+                                    <FormItem className="space-y-3">
+                                        <FormControl>
+                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <label className={`block p-4 border rounded-lg cursor-pointer ${field.value === 'deposit' ? 'border-primary ring-2 ring-primary' : 'border-border'}`}>
+                                                    <input type="radio" value="deposit" {...field} className="sr-only" />
+                                                    <h4 className="font-semibold">Pagar solo el Depósito</h4>
+                                                    <p className="text-sm text-muted-foreground">Paga $250.00 ahora para reservar. El resto ($<span className="font-mono">{(reservationDetails.rentPrice).toFixed(2)}</span>) se paga al recoger el auto.</p>
+                                                </label>
+                                                 <label className={`block p-4 border rounded-lg cursor-pointer ${field.value === 'full_payment' ? 'border-primary ring-2 ring-primary' : 'border-border'}`}>
+                                                    <input type="radio" value="full_payment" {...field} className="sr-only" />
+                                                    <h4 className="font-semibold">Pagar Todo Ahora y Ahorrar 20%</h4>
+                                                    <p className="text-sm text-muted-foreground">Paga el total de $<span className="font-mono">{reservationDetails.totalWithDiscount.toFixed(2)}</span> y ahorra $<span className="font-mono">{reservationDetails.discountAmount.toFixed(2)}</span>.</p>
+                                                </label>
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                    )}
+                                />
+                                <Card className="bg-secondary/30 mt-6">
+                                    <CardContent className="p-4 text-center">
+                                        <p className="font-headline text-lg">Pagarás ahora:</p>
+                                        <p className="font-bold text-3xl text-primary font-mono">${amountToPay.toFixed(2)}</p>
+                                        <p className="text-sm text-muted-foreground">{paymentConcept}</p>
+                                    </CardContent>
+                                </Card>
+
+
                                 <p className="text-sm text-muted-foreground text-center mt-4 mb-4">
                                     Es importante que los datos de contácto (e-mail/teléfono) sean correctos para poder confirmar tu reserva. Sin ésta confirmación por parte nuestra, la reserva no será válida.
                                 </p>
                                 <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-lg py-6">
-                                    Confirmar y Rentar por WhatsApp
+                                    Confirmar y Pagar por WhatsApp
                                 </Button>
                             </form>
                         </Form>
@@ -313,7 +351,7 @@ Combustible: $${FUEL_COST.toFixed(2)}
                         <TableBody>
                             <TableRow><TableCell className="font-semibold p-1">Vehículo:</TableCell><TableCell className="p-1">{car.name}</TableCell></TableRow>
                             <TableRow><TableCell className="font-semibold p-1">Categoría:</TableCell><TableCell className="p-1">{car.features.includes('Automático') ? 'Economico Automático' : 'Economico Manual'}</TableCell></TableRow>
-                            <TableRow><TableCell className="font-semibold p-1">Total días:</TableCell><TableCell className="p-1">{rentalDays}</TableCell></TableRow>
+                            <TableRow><TableCell className="font-semibold p-1">Total días:</TableCell><TableCell className="p-1">{reservationDetails.rentalDays}</TableCell></TableRow>
                             <TableRow><TableCell className="font-semibold p-1">Precio diario:</TableCell><TableCell className="p-1">${car.pricePerDay.toFixed(2)}</TableCell></TableRow>
                              <TableRow>
                                 <TableCell className="font-semibold p-1 align-top">Recogida:</TableCell>
@@ -328,21 +366,25 @@ Combustible: $${FUEL_COST.toFixed(2)}
                     
                     <Separator className="my-4" />
                     
-                    <h3 className="font-headline text-xl font-semibold text-primary">Importe a pagar ({rentalDays} x Renta)</h3>
+                    <h3 className="font-headline text-xl font-semibold text-primary">Costo Total de la Renta</h3>
                      <Table>
                         <TableBody>
-                            <TableRow><TableCell className="text-muted-foreground p-1">Precio diario</TableCell><TableCell className="text-right p-1 font-mono">${car.pricePerDay.toFixed(2)}</TableCell></TableRow>
-                            <TableRow><TableCell className="text-muted-foreground p-1">Precio de Renta</TableCell><TableCell className="text-right p-1 font-mono">${rentPrice.toFixed(2)}</TableCell></TableRow>
-                            <TableRow><TableCell className="text-muted-foreground p-1">Seguro</TableCell><TableCell className="text-right p-1 font-mono">${insurancePrice.toFixed(2)}</TableCell></TableRow>
-                            <TableRow><TableCell className="text-muted-foreground p-1">Combustible</TableCell><TableCell className="text-right p-1 font-mono">${FUEL_COST.toFixed(2)}</TableCell></TableRow>
+                            <TableRow><TableCell className="text-muted-foreground p-1">Costo de Renta ({reservationDetails.rentalDays} días)</TableCell><TableCell className="text-right p-1 font-mono">${reservationDetails.rentPrice.toFixed(2)}</TableCell></TableRow>
+                            <TableRow><TableCell className="text-muted-foreground p-1">Depósito (reembolsable)</TableCell><TableCell className="text-right p-1 font-mono">${reservationDetails.deposit.toFixed(2)}</TableCell></TableRow>
                         </TableBody>
                     </Table>
 
                     <Separator className="my-4" />
                     <div className="flex justify-between items-center text-2xl font-bold text-primary">
-                        <span className="font-headline">Importe Total:</span>
-                        <span className="font-mono">${totalPrice.toFixed(2)}</span>
+                        <span className="font-headline">Total:</span>
+                        <span className="font-mono">${reservationDetails.totalWithoutDiscount.toFixed(2)}</span>
                     </div>
+                     <Card className="mt-4 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+                        <CardContent className="p-3 text-center">
+                            <p className="text-sm font-bold text-green-700 dark:text-green-300">¡Ahorra ${reservationDetails.discountAmount.toFixed(2)}!</p>
+                            <p className="text-xs text-green-600 dark:text-green-400">Paga todo por adelantado por solo <span className="font-mono">${reservationDetails.totalWithDiscount.toFixed(2)}</span>.</p>
+                        </CardContent>
+                    </Card>
 
                     <Dialog>
                         <DialogTrigger asChild>
@@ -435,12 +477,12 @@ Combustible: $${FUEL_COST.toFixed(2)}
                     <div className="flex justify-center items-center pb-4">
                         <PartyPopper className="h-10 w-10 text-accent" />
                     </div>
-                    <AlertDialogTitle className="text-center font-headline text-2xl text-primary">¡Muchas gracias por tu reserva!</AlertDialogTitle>
+                    <AlertDialogTitle className="text-center font-headline text-2xl text-primary">¡Casi listo! Tu reserva está pre-confirmada.</AlertDialogTitle>
                     <AlertDialogDescription className="text-center text-muted-foreground">
-                        Hemos recibido tu reserva con el resumen de tu pedido. Ponte en contacto para confirmar tu reservación y proceder con el pago. También te podrán responder a cualquier pregunta que puedas tener y resolver tus inquietudes sobre los detalles de tu pedido.
+                        Hemos enviado tu solicitud a través de WhatsApp. Un agente se pondrá en contacto contigo en breve para confirmar la disponibilidad y guiarte con el proceso de pago.
                         <br/><br/>
                         ¡Gracias por confiar en nosotros!
-                    </AlertDialogDescription>
+                    </Description>
                 </AlertDialogHeader>
                 <AlertDialogAction onClick={() => router.push('/')} className="bg-accent hover:bg-accent/90">
                     Entendido

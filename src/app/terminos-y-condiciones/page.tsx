@@ -48,6 +48,17 @@ export default function TerminosYCondicionesPage() {
                     <li>Intervendremos en caso de cualquier inconveniente para aclarar la situación de su reserva.</li>
                 </ul>
 
+                <h3 className="font-headline text-xl text-primary">Políticas Clave de Reserva y Pago</h3>
+                 <ul>
+                    <li><strong>Depósito de Reserva y Garantía:</strong> Para confirmar cualquier reserva, se requiere un pago por adelantado de <strong>$250.00 USD</strong>. Este monto funciona como un depósito de garantía reembolsable.</li>
+                    <li><strong>Reembolso del Depósito:</strong> El depósito de $250.00 USD será devuelto íntegramente al cliente después de que el vehículo haya sido entregado y se verifique que no presenta daños.</li>
+                    <li><strong>Pago del Saldo:</strong> El saldo restante del costo total de la renta puede ser pagado por el cliente al momento de recibir el vehículo.</li>
+                    <li><strong>Descuento por Pago Adelantado:</strong> Ofrecemos un <strong>20% de descuento</strong> sobre el costo total de la renta (sin incluir el depósito) si el cliente elige pagar la totalidad del monto por adelantado al momento de hacer la reserva.</li>
+                    <li><strong>Política de Combustible:</strong> Se incluye una tarjeta de combustible prepagada para un máximo de 200 litros de gasolina (B90 o B93) a un costo de $0.50 USD por litro. Esta tarjeta debe ser gestionada y pagada antes de la llegada del cliente, ya que requiere la identificación personal para su emisión.</li>
+                    <li><strong>Contrato y Seguro:</strong> Al momento de la entrega del vehículo, el cliente deberá firmar un contrato de arrendamiento. Este contrato estipula que, en caso de accidente o daños al vehículo, los costos de reparación se deducirán del depósito de garantía de $250.00 USD.</li>
+                     <li><strong>Matrícula (Chapa):</strong> Todos nuestros vehículos se entregan con matrícula de tipo "ESA".</li>
+                </ul>
+
                 <h3 className="font-headline text-xl text-primary">EL CLIENTE DEBE DE SABER ANTES DE LA CONFIRMACIÓN DE SU RESERVA</h3>
                 <ul>
                     <li>Las edades, mínima y máxima, establecidas para rentar un auto sin ninguna comisión extra de relevo de responsabilidad (SEGURO) son de 25 a 75 años.</li>

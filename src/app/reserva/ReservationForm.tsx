@@ -11,7 +11,7 @@ import { format, differenceInCalendarDays, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 
-import type { Car } from '@/lib/types';
+import type { Car, ReservationDetails } from '@/lib/types';
 import { locations } from '@/lib/locations';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Info, Calendar as CalendarIcon } from 'lucide-react';
+import { Info, Calendar as CalendarIcon, Fuel, ShieldCheck, FileText } from 'lucide-react';
 import RentalInfo from '../confirmacion/RentalInfo';
 import {
   Carousel,
@@ -31,6 +31,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
+import { calculateReservationDetails } from '@/lib/utils';
 
 const generateTimeSlots = () => {
     const slots: string[] = [];
@@ -63,8 +64,6 @@ const formSchema = z.object({
     path: ['dropoffDate'],
 });
 
-const INSURANCE_PER_DAY = 25;
-const FUEL_COST = 59;
 
 export default function ReservationForm({ car }: { car: Car }) {
   const router = useRouter();
@@ -83,17 +82,17 @@ export default function ReservationForm({ car }: { car: Car }) {
   const pickupDate = watch('pickupDate');
   const dropoffDate = watch('dropoffDate');
   
-  const [rentalDays, setRentalDays] = useState(0);
+  const [reservationDetails, setReservationDetails] = useState<ReservationDetails | null>(null);
   
   useEffect(() => {
     if (pickupDate && dropoffDate && dropoffDate >= pickupDate) {
       const days = differenceInCalendarDays(dropoffDate, pickupDate) + 1;
-      setRentalDays(days);
+      setReservationDetails(calculateReservationDetails(days, car.pricePerDay));
       trigger("dropoffDate");
     } else {
-      setRentalDays(0);
+      setReservationDetails(null);
     }
-  }, [pickupDate, dropoffDate, trigger]);
+  }, [pickupDate, dropoffDate, trigger, car.pricePerDay]);
 
 
   const minRentDaysString = car.details?.notes.find(n => n.includes('Mínimo de renta'));
@@ -101,12 +100,7 @@ export default function ReservationForm({ car }: { car: Car }) {
   const minRentDays = minRentDaysMatch ? parseInt(minRentDaysMatch[0], 10) : 1;
   const requiresMinDays = !!minRentDaysString;
 
-  const isDateRangeValid = rentalDays > 0 && (!requiresMinDays || rentalDays >= minRentDays);
-
-  const dailyPrice = car.pricePerDay;
-  const rentPrice = isDateRangeValid ? rentalDays * dailyPrice : 0;
-  const insurancePrice = isDateRangeValid ? rentalDays * INSURANCE_PER_DAY : 0;
-  const totalPrice = isDateRangeValid ? rentPrice + insurancePrice + FUEL_COST : 0;
+  const isDateRangeValid = !!reservationDetails && reservationDetails.rentalDays > 0 && (!requiresMinDays || reservationDetails.rentalDays >= minRentDays);
   
   const imageList = car.imageUrls && car.imageUrls.length > 0 ? car.imageUrls : [car.imageUrl];
 
@@ -283,6 +277,36 @@ export default function ReservationForm({ car }: { car: Car }) {
             </Form>
           </CardContent>
         </Card>
+        
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline text-2xl text-primary">Información Esencial de la Renta</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div className="flex items-start gap-4">
+                    <ShieldCheck className="h-6 w-6 text-accent mt-1 shrink-0" />
+                    <div>
+                        <h4 className="font-semibold text-primary">Depósito de Garantía de $250 (Reembolsable)</h4>
+                        <p className="text-sm text-muted-foreground">Para confirmar tu reserva, se requiere un pago por adelantado de $250. Este monto actúa como un depósito de garantía y es completamente reembolsable al finalizar el período de renta, siempre que el vehículo sea devuelto en las mismas condiciones en que fue entregado.</p>
+                    </div>
+                </div>
+                 <div className="flex items-start gap-4">
+                    <Fuel className="h-6 w-6 text-accent mt-1 shrink-0" />
+                    <div>
+                        <h4 className="font-semibold text-primary">Política de Combustible (B90/B93)</h4>
+                        <p className="text-sm text-muted-foreground">Se incluye una tarjeta de combustible prepagada con hasta 200 litros a un costo de $0.50/litro ($100 máximo). Esta tarjeta debe ser adquirida antes de tu llegada, ya que está asociada a tu identificación personal. Te contactaremos para gestionar este trámite.</p>
+                    </div>
+                </div>
+                 <div className="flex items-start gap-4">
+                    <FileText className="h-6 w-6 text-accent mt-1 shrink-0" />
+                    <div>
+                        <h4 className="font-semibold text-primary">Contrato y Cobertura de Seguro</h4>
+                        <p className="text-sm text-muted-foreground">Al recoger el vehículo, firmarás un contrato de alquiler. En caso de accidente o daños al vehículo, los costos se cubrirán con el depósito de garantía. Es crucial revisar y entender los términos del contrato en el momento de la firma.</p>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+        
          {car.details && <RentalInfo details={car.details} />}
       </div>
 
@@ -313,36 +337,37 @@ export default function ReservationForm({ car }: { car: Car }) {
                     </div>
                 </div>
             </CardHeader>
-             {isDateRangeValid && (
+             {isDateRangeValid && reservationDetails && (
                 <CardContent className="p-6 pt-0">
                     <Separator className="mb-4" />
-                    <h4 className="font-headline text-lg font-semibold text-primary mb-2">Importe a pagar ({rentalDays} x Renta)</h4>
+                    <h4 className="font-headline text-lg font-semibold text-primary mb-2">Resumen del Costo ({reservationDetails.rentalDays} días)</h4>
                     <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                            <span className="text-muted-foreground">Precio diario</span>
-                            <span className="font-mono">${dailyPrice.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Precio de Renta</span>
-                            <span className="font-mono">${rentPrice.toFixed(2)}</span>
+                            <span className="text-muted-foreground">Costo de Renta</span>
+                            <span className="font-mono">${reservationDetails.rentPrice.toFixed(2)}</span>
                         </div>
                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Seguro</span>
-                            <span className="font-mono">${insurancePrice.toFixed(2)}</span>
-                        </div>
-                         <div className="flex justify-between">
-                            <span className="text-muted-foreground">Combustible</span>
-                            <span className="font-mono">${FUEL_COST.toFixed(2)}</span>
+                            <span className="text-muted-foreground">Depósito Reembolsable</span>
+                            <span className="font-mono">${reservationDetails.deposit.toFixed(2)}</span>
                         </div>
                     </div>
                      <Separator className="my-4" />
-                    <div className="flex justify-between items-center text-xl font-bold text-primary">
-                        <span>Importe Total</span>
-                        <span className="font-mono">${totalPrice.toFixed(2)}</span>
+                     <div className="flex justify-between items-center text-xl font-bold text-primary">
+                        <span>Total a Pagar</span>
+                        <span className="font-mono">${reservationDetails.totalWithoutDiscount.toFixed(2)}</span>
                     </div>
+                    <div className="text-right text-sm text-muted-foreground">
+                        (Renta + Depósito)
+                    </div>
+                     <Card className="mt-4 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+                        <CardContent className="p-3 text-center">
+                            <p className="text-sm font-bold text-green-700 dark:text-green-300">¡Paga por adelantado y ahorra un 20%!</p>
+                            <p className="text-xs text-green-600 dark:text-green-400">Pagarías ${reservationDetails.totalWithDiscount.toFixed(2)} en total, ahorrando ${reservationDetails.discountAmount.toFixed(2)}.</p>
+                        </CardContent>
+                    </Card>
                 </CardContent>
             )}
-             {!isDateRangeValid && rentalDays > 0 && (
+             {!isDateRangeValid && reservationDetails && reservationDetails.rentalDays > 0 && (
                 <CardFooter className="p-6 pt-0">
                     <p className="text-destructive text-sm text-center w-full bg-destructive/10 p-2 rounded-md">
                         Este auto requiere un mínimo de {minRentDays} días de renta.

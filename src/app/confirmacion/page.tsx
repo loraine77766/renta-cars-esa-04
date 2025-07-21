@@ -5,6 +5,9 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { cars } from '@/lib/cars';
 import ConfirmationDetails from './ConfirmationDetails';
+import { calculateReservationDetails } from '@/lib/utils';
+import type { ReservationDetails as ReservationDetailsType } from '@/lib/types';
+
 
 type ConfirmationPageProps = {
   searchParams: {
@@ -40,10 +43,12 @@ export default function ConfirmationPage({ searchParams }: ConfirmationPageProps
   
   const rentalDays = differenceInCalendarDays(endDate, startDate) + 1;
   
-  const INSURANCE_PER_DAY = 25;
-  const FUEL_COST = 59;
-  const totalPrice = (rentalDays * car.pricePerDay) + (rentalDays * INSURANCE_PER_DAY) + FUEL_COST;
+  const reservationDetails: ReservationDetailsType | null = calculateReservationDetails(rentalDays, car.pricePerDay);
 
+  if (!reservationDetails) {
+     redirect('/');
+  }
+  
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -52,17 +57,14 @@ export default function ConfirmationPage({ searchParams }: ConfirmationPageProps
           car={car}
           startDate={startDate}
           endDate={endDate}
-          rentalDays={rentalDays}
-          totalPrice={totalPrice}
           pickupLocation={pickupLocation}
           dropoffLocation={dropoffLocation}
           pickupTime={pickupTime}
           dropoffTime={dropoffTime}
+          reservationDetails={reservationDetails}
         />
       </main>
       <Footer />
     </div>
   );
 }
-
-    

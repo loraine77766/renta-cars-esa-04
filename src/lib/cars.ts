@@ -18,7 +18,7 @@ export const cars: Car[] = [
       '/images/images/kia-picanto6.jpg'
     ],
     imageHint: 'hatchback blue',
-    features: ['4 Puertas', '4 Pasajeros', 'Automático', 'Gasolina', 'Clima', 'Maletero', 'Seguro incluido'],
+    features: ['4 Puertas', '4 Pasajeros', 'Automático', 'Gasolina', 'Clima', 'Maletero', 'Seguro incluido', 'Chapa ESA'],
     details: {
       additionalCharges: [
         'Los cargos adicionales son abonados directamente a la compañía rentadora mediante tarjeta en el momento a la apertura del contrato. No se admitirán pagos en efectivo.'
@@ -51,7 +51,7 @@ export const cars: Car[] = [
     originalPricePerDay: 110,
     imageUrl: '/images/images/Dongfeng Aeolus Yixuan.png',
     imageHint: 'sedan white',
-    features: ['4 Puertas', '5 Pasajeros', 'Automático', 'Gasolina', 'Clima', 'Maletero', 'Seguro incluido'],
+    features: ['4 Puertas', '5 Pasajeros', 'Automático', 'Gasolina', 'Clima', 'Maletero', 'Seguro incluido', 'Chapa ESA'],
     details: {
       additionalCharges: [
         'Los cargos adicionales son abonados directamente a la compañía rentadora mediante tarjeta en el momento a la apertura del contrato. No se admitirán pagos en efectivo.'
@@ -84,7 +84,7 @@ export const cars: Car[] = [
     originalPricePerDay: 90,
     imageUrl: '/images/images/Hyundai Grand I10.jpg',
     imageHint: 'hatchback silver',
-    features: ['4 Puertas', '4 Pasajeros', 'Mecánico', 'Gasolina', 'Clima', 'Maletero', 'Seguro incluido'],
+    features: ['4 Puertas', '4 Pasajeros', 'Mecánico', 'Gasolina', 'Clima', 'Maletero', 'Seguro incluido', 'Chapa ESA'],
     details: {
       additionalCharges: [
         'Los cargos adicionales son abonados directamente a la compañía rentadora mediante tarjeta en el momento a la apertura del contrato. No se admitirán pagos en efectivo.'
@@ -116,7 +116,7 @@ export const cars: Car[] = [
     pricePerDay: 90,
     imageUrl: '/images/images/Hyundai Accent.jpg',
     imageHint: 'sedan silver',
-    features: ['4 Puertas', '5 Pasajeros', 'Mecánico', 'Gasolina', 'Clima', 'Maletero', 'Seguro incluido'],
+    features: ['4 Puertas', '5 Pasajeros', 'Mecánico', 'Gasolina', 'Clima', 'Maletero', 'Seguro incluido', 'Chapa ESA'],
     details: {
       additionalCharges: [
         'Los cargos adicionales son abonados directamente a la compañía rentadora mediante tarjeta en el momento a la apertura del contrato. No se admitirán pagos en efectivo.'
@@ -148,7 +148,7 @@ export const cars: Car[] = [
     pricePerDay: 115,
     imageUrl: 'https://placehold.co/600x400.png',
     imageHint: 'suv modern',
-    features: ['4 Puertas', '5 Pasajeros', 'Automático', 'Gasolina', 'Clima', 'Maletero', 'Seguro incluido'],
+    features: ['4 Puertas', '5 Pasajeros', 'Automático', 'Gasolina', 'Clima', 'Maletero', 'Seguro incluido', 'Chapa ESA'],
     details: {
       additionalCharges: [
         'Los cargos adicionales son abonados directamente a la compañía rentadora mediante tarjeta en el momento a la apertura del contrato. No se admitirán pagos en efectivo.'
