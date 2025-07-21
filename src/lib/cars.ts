@@ -146,7 +146,7 @@ export const cars: Car[] = [
     name: 'Hyundai Cantus',
     description: 'Un vehículo versátil y moderno, perfecto para cualquier aventura.',
     pricePerDay: 115,
-    imageUrl: 'https://placehold.co/600x400.png',
+    imageUrl: '/images/images/Hyundai Cantus.jpg',
     imageHint: 'suv modern',
     features: ['4 Puertas', '5 Pasajeros', 'Automático', 'Gasolina', 'Clima', 'Maletero', 'Seguro incluido', 'Chapa ESA'],
     details: {
