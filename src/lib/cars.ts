@@ -184,7 +184,7 @@ export const cars: Car[] = [
     description: 'Un SUV elegante y bien equipado, que ofrece una experiencia de conducción superior.',
     pricePerDay: 125,
     originalPricePerDay: 140,
-    imageUrl: '/images/images/bestunet55.jpg',
+    imageUrl: '/images/images/bestuneT55.jpg',
     imageHint: 'suv gray',
     features: ['4 Puertas', '5 Pasajeros', 'Automático', 'Gasolina', 'Clima', 'Maletero', 'Seguro incluido', 'Chapa ESA'],
     details: {
