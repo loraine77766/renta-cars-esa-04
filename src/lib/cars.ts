@@ -3,6 +3,40 @@ import type { Car } from './types';
 
 export const cars: Car[] = [
   {
+    id: 1,
+    name: 'Mercedes E200',
+    description: 'Experimenta el lujo y el rendimiento con este sedán premium, ideal para negocios o placer.',
+    pricePerDay: 220,
+    originalPricePerDay: 230,
+    imageUrl: '/images/images/mercedese200.jpg',
+    imageHint: 'sedan luxury white',
+    features: ['4 Puertas', '5 Pasajeros', 'Automático', 'Gasolina', 'Clima', 'Maletero', 'Seguro incluido', 'Chapa ESA'],
+    details: {
+      additionalCharges: [
+        'Los cargos adicionales son abonados directamente a la compañía rentadora mediante tarjeta en el momento a la apertura del contrato. No se admitirán pagos en efectivo.'
+      ],
+      notIncluded: [
+        'Conductor adicional (Max. 2, precio por chofer por día: 3.50 USD).',
+        'Depósito de garantía.'
+      ],
+      included: [
+        'Seguro diario.',
+        'Depósito de Combustible.',
+        'Tasa de Aeropuerto (20.00 USD si aplica).'
+      ],
+      pickupAndDropoff: [
+        'Si su hora de DEVOLUCIÓN al momento de reservar es más de 4 horas que su hora de RECOGIDA el sistema cargara 1 día adicional a su reserva automáticamente. Asegúrese de entregar el auto a la hora establecida.'
+      ],
+      notes: [
+        'A conductores entre 21-24 años y 75-80 años de edad se le incrementará el costo del seguro en un 50%.',
+        'RentCubaCar solo confirma categorías, no marcas y/o modelos específicos.',
+        'Mínimo de renta: 5 días.',
+        'Costo de seguro por día: $45.00 USD.',
+        'Costo de combustible (única vez): $72.00 USD.'
+      ]
+    }
+  },
+  {
     id: 12,
     name: 'Bestune T90',
     description: 'Un SUV espacioso y lujoso, perfecto para viajes largos con la familia.',
