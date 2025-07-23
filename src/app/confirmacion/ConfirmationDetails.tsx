@@ -482,7 +482,7 @@ Total con 20% descuento (pago adelantado): $${reservationDetails.totalWithDiscou
                         Hemos enviado tu solicitud a través de WhatsApp. Un agente se pondrá en contacto contigo en breve para confirmar la disponibilidad y guiarte con el proceso de pago.
                         <br/><br/>
                         ¡Gracias por confiar en nosotros!
-                    </Description>
+                    </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogAction onClick={() => router.push('/')} className="bg-accent hover:bg-accent/90">
                     Entendido
