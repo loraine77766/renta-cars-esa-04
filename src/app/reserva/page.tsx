@@ -10,53 +10,24 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { Suspense } from 'react';
 
-type ReservationPageProps = {};
-
-function ReservationPageComponent({ searchParams }: { searchParams: { carId?: string }}) {
-    const router = useRouter();
-    const { carId } = searchParams;
-
-    if (!carId) {
-        redirect('/');
-    }
-
-    const car = cars.find(c => c.id === parseInt(carId, 10));
-
-    if (!car) {
-        redirect('/');
-    }
-    
-    return (
-        <div className="flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-1 container mx-auto px-4 py-8">
-                <div className="mb-6">
-                    <Button variant="outline" onClick={() => router.back()}>
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Volver
-                    </Button>
-                </div>
-                <ReservationForm car={car} />
-            </main>
-            <Footer />
-        </div>
-    )
-}
-
-export default function ReservationPage(props: ReservationPageProps) {
+// This is the parent component, which can be a server component or a client component.
+// It sets up the main structure and uses Suspense to handle the client-side part.
+export default function ReservationPage() {
   return (
-    <Suspense fallback={<div>Cargando...</div>}>
-      <ReservationPageContent {...props} />
+    <Suspense fallback={<div className="flex flex-col min-h-screen items-center justify-center"><p>Cargando...</p></div>}>
+      <ReservationPageContent />
     </Suspense>
   )
 }
 
-function ReservationPageContent(props: ReservationPageProps) {
+// This component MUST be a client component because it uses client-side hooks like useSearchParams and useRouter.
+function ReservationPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const carId = searchParams.get('carId');
 
   if (!carId) {
+    // Using redirect from next/navigation is fine in client components.
     redirect('/');
   }
 
