@@ -9,11 +9,10 @@ import ConfirmationDetails from './ConfirmationDetails';
 import { calculateReservationDetails } from '@/lib/utils';
 import type { ReservationDetails as ReservationDetailsType } from '@/lib/types';
 
-interface ConfirmationPageProps {
-  searchParams: {
-    [key: string]: string | string[] | undefined;
-  };
-}
+// This is the correct way to type page props in Next.js App Router
+type ConfirmationPageProps = {
+  searchParams: { [key: string]: string | string[] | undefined };
+};
 
 export default function ConfirmationPage({ searchParams }: ConfirmationPageProps) {
   const { carId, from, to, pickupLocation, dropoffLocation, pickupTime, dropoffTime } = searchParams;
