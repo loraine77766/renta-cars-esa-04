@@ -131,9 +131,9 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
       name: '',
       lastName1: '',
       lastName2: '',
-      birthDay: '' as any,
-      birthMonth: '' as any,
-      birthYear: '' as any,
+      birthDay: undefined,
+      birthMonth: undefined,
+      birthYear: undefined,
       phone: '',
       country: '',
       passport: '',
@@ -239,13 +239,13 @@ Total con 20% descuento (pago adelantado): $${reservationDetails.totalWithDiscou
                                         <FormLabel>Fecha de nacimiento *</FormLabel>
                                         <div className="flex gap-2">
                                             <FormField control={form.control} name="birthDay" render={({ field }) => (
-                                                <FormItem className="flex-1"><FormControl><Input placeholder="Día" type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))} /></FormControl><FormMessage /></FormItem>
+                                                <FormItem className="flex-1"><FormControl><Input placeholder="Día" type="number" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>
                                             )}/>
                                             <FormField control={form.control} name="birthMonth" render={({ field }) => (
-                                                <FormItem className="flex-1"><FormControl><Input placeholder="Mes" type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))} /></FormControl><FormMessage /></FormItem>
+                                                <FormItem className="flex-1"><FormControl><Input placeholder="Mes" type="number" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>
                                             )}/>
                                             <FormField control={form.control} name="birthYear" render={({ field }) => (
-                                                <FormItem className="flex-1"><FormControl><Input placeholder="Año" type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))} /></FormControl><FormMessage /></FormItem>
+                                                <FormItem className="flex-1"><FormControl><Input placeholder="Año" type="number" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>
                                             )}/>
                                         </div>
                                          <FormMessage>{form.formState.errors.birthYear?.message}</FormMessage>
@@ -287,12 +287,12 @@ Total con 20% descuento (pago adelantado): $${reservationDetails.totalWithDiscou
                                         <FormControl>
                                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <label className={`block p-4 border rounded-lg cursor-pointer ${field.value === 'deposit' ? 'border-primary ring-2 ring-primary' : 'border-border'}`}>
-                                                    <input type="radio" value="deposit" {...field} className="sr-only" />
+                                                    <input type="radio" {...field} value="deposit" checked={field.value === 'deposit'} className="sr-only" />
                                                     <h4 className="font-semibold">Pagar solo el Depósito</h4>
                                                     <p className="text-sm text-muted-foreground">Paga $250.00 ahora para reservar. El resto ($<span className="font-mono">{(reservationDetails.rentPrice).toFixed(2)}</span>) se paga al recoger el auto.</p>
                                                 </label>
                                                  <label className={`block p-4 border rounded-lg cursor-pointer ${field.value === 'full_payment' ? 'border-primary ring-2 ring-primary' : 'border-border'}`}>
-                                                    <input type="radio" value="full_payment" {...field} className="sr-only" />
+                                                    <input type="radio" {...field} value="full_payment" checked={field.value === 'full_payment'} className="sr-only" />
                                                     <h4 className="font-semibold">Pagar Todo Ahora y Ahorrar 20%</h4>
                                                     <p className="text-sm text-muted-foreground">Paga el total de $<span className="font-mono">{reservationDetails.totalWithDiscount.toFixed(2)}</span> y ahorra $<span className="font-mono">{reservationDetails.discountAmount.toFixed(2)}</span>.</p>
                                                 </label>
@@ -492,3 +492,4 @@ Total con 20% descuento (pago adelantado): $${reservationDetails.totalWithDiscou
     </div>
   );
 }
+
