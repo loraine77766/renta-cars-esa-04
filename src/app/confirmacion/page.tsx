@@ -9,7 +9,13 @@ import ConfirmationDetails from './ConfirmationDetails';
 import { calculateReservationDetails } from '@/lib/utils';
 import type { ReservationDetails as ReservationDetailsType } from '@/lib/types';
 
-export default function ConfirmationPage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
+interface ConfirmationPageProps {
+  searchParams: {
+    [key: string]: string | string[] | undefined;
+  };
+}
+
+export default function ConfirmationPage({ searchParams }: ConfirmationPageProps) {
   const { carId, from, to, pickupLocation, dropoffLocation, pickupTime, dropoffTime } = searchParams;
 
   if (
