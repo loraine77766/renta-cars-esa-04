@@ -1,6 +1,6 @@
 
 import { redirect } from 'next/navigation';
-import { differenceInCalendarDays, parseISO } from 'date-fns';
+import { differenceInCalendarDays, isValid, parseISO } from 'date-fns';
 
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -9,20 +9,28 @@ import ConfirmationDetails from './ConfirmationDetails';
 import { calculateReservationDetails } from '@/lib/utils';
 import type { ReservationDetails as ReservationDetailsType } from '@/lib/types';
 
+type ConfirmationPageProps = {
+  searchParams: {
+    [key: string]: string | string[] | undefined;
+  };
+};
 
-export default function ConfirmationPage({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
-}) {
+export default function ConfirmationPage({ searchParams }: ConfirmationPageProps) {
   const { carId, from, to, pickupLocation, dropoffLocation, pickupTime, dropoffTime } = searchParams;
 
-  if (!carId || !from || !to || !pickupLocation || !dropoffLocation || !pickupTime || !dropoffTime || Array.isArray(carId) || Array.isArray(from) || Array.isArray(to) || Array.isArray(pickupLocation) || Array.isArray(dropoffLocation) || Array.isArray(pickupTime) || Array.isArray(dropoffTime)) {
+  if (
+    !carId || typeof carId !== 'string' ||
+    !from || typeof from !== 'string' ||
+    !to || typeof to !== 'string' ||
+    !pickupLocation || typeof pickupLocation !== 'string' ||
+    !dropoffLocation || typeof dropoffLocation !== 'string' ||
+    !pickupTime || typeof pickupTime !== 'string' ||
+    !dropoffTime || typeof dropoffTime !== 'string'
+  ) {
     redirect('/');
   }
 
   const car = cars.find(c => c.id === parseInt(carId, 10));
-
   if (!car) {
     redirect('/');
   }
@@ -30,11 +38,14 @@ export default function ConfirmationPage({
   const startDate = parseISO(from);
   const endDate = parseISO(to);
 
-  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+  if (!isValid(startDate) || !isValid(endDate) || endDate < startDate) {
     redirect('/');
   }
   
   const rentalDays = differenceInCalendarDays(endDate, startDate) + 1;
+  if (rentalDays <= 0) {
+      redirect('/');
+  }
   
   const reservationDetails: ReservationDetailsType | null = calculateReservationDetails(rentalDays, car.pricePerDay);
 
