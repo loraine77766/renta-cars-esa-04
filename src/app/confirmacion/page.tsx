@@ -1,3 +1,4 @@
+
 import { redirect } from 'next/navigation';
 import { differenceInCalendarDays, parseISO } from 'date-fns';
 
@@ -9,11 +10,11 @@ import { calculateReservationDetails } from '@/lib/utils';
 import type { ReservationDetails as ReservationDetailsType } from '@/lib/types';
 
 
-type ConfirmationPageProps = {
+export default function ConfirmationPage({
+  searchParams,
+}: {
   searchParams: { [key: string]: string | string[] | undefined };
-};
-
-export default function ConfirmationPage({ searchParams }: ConfirmationPageProps) {
+}) {
   const { carId, from, to, pickupLocation, dropoffLocation, pickupTime, dropoffTime } = searchParams;
 
   if (!carId || !from || !to || !pickupLocation || !dropoffLocation || !pickupTime || !dropoffTime || Array.isArray(carId) || Array.isArray(from) || Array.isArray(to) || Array.isArray(pickupLocation) || Array.isArray(dropoffLocation) || Array.isArray(pickupTime) || Array.isArray(dropoffTime)) {
