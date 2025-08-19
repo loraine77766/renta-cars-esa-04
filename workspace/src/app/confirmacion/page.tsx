@@ -6,33 +6,25 @@ import type { Metadata } from 'next';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { cars } from '@/lib/cars';
-import ConfirmationDetails from './ConfirmationDetails';
+import ConfirmationDetails from '@/app/confirmacion/ConfirmationDetails';
 import { calculateReservationDetails } from '@/lib/utils';
 import type { ReservationDetails as ReservationDetailsType } from '@/lib/types';
 
-interface ConfirmationPageProps {
-  searchParams: {
-    carId?: string;
-    from?: string;
-    to?: string;
-    pickupLocation?: string;
-    dropoffLocation?: string;
-    pickupTime?: string;
-    dropoffTime?: string;
-  };
-}
-
-export default function ConfirmationPage({ searchParams }: ConfirmationPageProps) {
+export default function ConfirmationPage({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
   const { carId, from, to, pickupLocation, dropoffLocation, pickupTime, dropoffTime } = searchParams;
 
   if (
-    !carId ||
-    !from ||
-    !to ||
-    !pickupLocation ||
-    !dropoffLocation ||
-    !pickupTime ||
-    !dropoffTime
+    !carId || typeof carId !== 'string' ||
+    !from || typeof from !== 'string' ||
+    !to || typeof to !== 'string' ||
+    !pickupLocation || typeof pickupLocation !== 'string' ||
+    !dropoffLocation || typeof dropoffLocation !== 'string' ||
+    !pickupTime || typeof pickupTime !== 'string' ||
+    !dropoffTime || typeof dropoffTime !== 'string'
   ) {
     redirect('/');
   }
