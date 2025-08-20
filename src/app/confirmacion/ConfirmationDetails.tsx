@@ -206,7 +206,7 @@ Total con 20% descuento (pago adelantado): $${reservationDetails.totalWithDiscou
 -----------------------------------
 ¡Gracias!
     `;
-    const whatsappUrl = `https://wa.me/18256097251?text=${encodeURIComponent(message.trim())}`;
+    const whatsappUrl = `https://wa.me/17067179341?text=${encodeURIComponent(message.trim())}`;
     window.open(whatsappUrl, '_blank');
     setIsConfirmationDialogOpen(true);
   }
@@ -492,4 +492,3 @@ Total con 20% descuento (pago adelantado): $${reservationDetails.totalWithDiscou
     </div>
   );
 }
-
