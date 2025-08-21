@@ -150,13 +150,13 @@ export default function ReservationForm({ car }: { car: Car }) {
                                 </FormItem>
                             )}
                         />
-                        <div className="flex gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <FormField
                                 control={form.control}
                                 name="pickupDate"
                                 render={({ field }) => (
                                 <FormItem className="flex-1">
-                                    <FormLabel>Fecha de recogida</FormLabel>
+                                    <FormLabel>Fecha</FormLabel>
                                     <Popover>
                                     <PopoverTrigger asChild>
                                         <FormControl>
@@ -188,7 +188,7 @@ export default function ReservationForm({ car }: { car: Car }) {
                                         <FormLabel>Hora</FormLabel>
                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                                             <FormControl>
-                                                <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
+                                                <SelectTrigger><SelectValue /></SelectTrigger>
                                             </FormControl>
                                             <SelectContent>{hours.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
                                         </Select>
@@ -219,13 +219,13 @@ export default function ReservationForm({ car }: { car: Car }) {
                                 </FormItem>
                             )}
                         />
-                        <div className="flex gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <FormField
                                 control={form.control}
                                 name="dropoffDate"
                                 render={({ field }) => (
                                 <FormItem className="flex-1">
-                                    <FormLabel>Fecha de devolución</FormLabel>
+                                    <FormLabel>Fecha</FormLabel>
                                     <Popover>
                                     <PopoverTrigger asChild>
                                         <FormControl>
@@ -257,7 +257,7 @@ export default function ReservationForm({ car }: { car: Car }) {
                                         <FormLabel>Hora</FormLabel>
                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                                             <FormControl>
-                                                <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
+                                                <SelectTrigger><SelectValue /></SelectTrigger>
                                             </FormControl>
                                             <SelectContent>{hours.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
                                         </Select>
@@ -325,8 +325,8 @@ export default function ReservationForm({ car }: { car: Car }) {
                   </CarouselContent>
                   {imageList.length > 1 && (
                     <>
-                      <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2" />
-                      <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2" />
+                      <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2" />
+                      <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2" />
                     </>
                   )}
                 </Carousel>

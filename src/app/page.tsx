@@ -65,9 +65,9 @@ export default function Home() {
         </section>
 
         <section className="my-16">
-           <h2 className="font-headline text-3xl font-bold text-center mb-8 text-primary">¿Cómo reservar un Auto?</h2>
-           <div className="relative grid grid-cols-1 md:grid-cols-5 gap-8">
-              <div className="hidden md:block absolute top-1/2 left-0 w-full h-px bg-border -translate-y-1/2 -mt-8"></div>
+           <h2 className="font-headline text-3xl font-bold text-center mb-12 text-primary">¿Cómo reservar un Auto?</h2>
+           <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-y-12 gap-x-8">
+              <div className="hidden lg:block absolute top-1/2 left-0 w-full h-px bg-border -translate-y-1/2 -mt-8"></div>
                {howToSteps.map((step, index) => (
                    <div key={index} className="relative text-center">
                        <div className="relative z-10 mx-auto bg-card border-2 border-accent rounded-full h-20 w-20 flex items-center justify-center mb-4">

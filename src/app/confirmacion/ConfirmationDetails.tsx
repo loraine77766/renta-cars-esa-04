@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -366,7 +367,7 @@ Total con 20% descuento (pago adelantado): $${reservationDetails.totalWithDiscou
                         <DialogTrigger asChild>
                              <Button variant="outline" className="w-full mt-4">Modificar Reserva</Button>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent className="sm:max-w-md">
                             <DialogHeader>
                                 <DialogTitle>Modificar reserva</DialogTitle>
                             </DialogHeader>
@@ -431,7 +432,7 @@ Total con 20% descuento (pago adelantado): $${reservationDetails.totalWithDiscou
                                         </FormItem>
                                         )}
                                     />
-                                    <DialogFooter>
+                                    <DialogFooter className="sm:justify-end">
                                         <DialogClose asChild>
                                             <Button type="button" variant="ghost">Cancelar</Button>
                                         </DialogClose>
