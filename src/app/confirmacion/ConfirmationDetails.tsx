@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -75,24 +74,7 @@ const formSchema = z.object({
 const modifySchema = z.object({
     pickupDate: z.date(),
     dropoffDate: z.date(),
-    pickupTime: z.string(),
-    dropoffTime: z.string(),
 });
-
-const generateTimeSlots = () => {
-    const slots: string[] = [];
-    for (let i = 0; i < 24; i++) {
-        for (let j = 0; j < 60; j += 30) {
-            const hour = i;
-            const minute = j;
-            const date = new Date();
-            date.setHours(hour, minute);
-            slots.push(format(date, "HH:mm"));
-        }
-    }
-    return slots;
-};
-const hours = generateTimeSlots();
 
 
 export default function ConfirmationDetails({ car, startDate, endDate, pickupLocation, dropoffLocation, pickupTime, dropoffTime, reservationDetails }: ConfirmationDetailsProps) {
@@ -155,22 +137,16 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
     defaultValues: {
         pickupDate: startDate,
         dropoffDate: endDate,
-        pickupTime: pickupTime,
-        dropoffTime: dropoffTime
     }
   });
 
   function onModify(values: z.infer<typeof modifySchema>) {
       const fromDate = format(values.pickupDate, 'yyyy-MM-dd');
       const toDate = format(values.dropoffDate, 'yyyy-MM-dd');
-      const fromTime = values.pickupTime;
-      const toTime = values.dropoffTime;
       
       const currentParams = new URLSearchParams(searchParams.toString());
       currentParams.set('from', fromDate);
       currentParams.set('to', toDate);
-      currentParams.set('pickupTime', fromTime);
-      currentParams.set('dropoffTime', toTime);
 
       router.push(`/confirmacion?${currentParams.toString()}`);
   }
@@ -492,3 +468,5 @@ Total con 20% descuento (pago adelantado): $${reservationDetails.totalWithDiscou
     </div>
   );
 }
+
+    
