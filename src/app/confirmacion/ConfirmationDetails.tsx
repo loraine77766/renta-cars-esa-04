@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { format, differenceInYears, parse, addDays } from 'date-fns';
+import { format, differenceInYears, parse, addDays, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -96,8 +96,8 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
 
       if (!isNaN(startDateTime.getTime()) && !isNaN(endDateTime.getTime())) {
           setFormattedDates({
-              start: format(startDateTime, "EEE dd/MM/yyyy - HH:mm", { locale: es }),
-              end: format(endDateTime, "EEE dd/MM/yyyy - HH:mm", { locale: es }),
+              start: format(startDateTime, "EEE dd/MM/yyyy - HH:mm", { locale: es, timeZone: 'UTC' }),
+              end: format(endDateTime, "EEE dd/MM/yyyy - HH:mm", { locale: es, timeZone: 'UTC' }),
           });
       } else {
         setFormattedDates({ start: 'Fecha inválida', end: 'Fecha inválida' });
@@ -142,8 +142,8 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
   });
 
   function onModify(values: z.infer<typeof modifySchema>) {
-      const fromDate = format(values.pickupDate, 'yyyy-MM-dd');
-      const toDate = format(values.dropoffDate, 'yyyy-MM-dd');
+      const fromDate = values.pickupDate.toISOString();
+      const toDate = values.dropoffDate.toISOString();
       
       const currentParams = new URLSearchParams(searchParams.toString());
       currentParams.set('from', fromDate);
@@ -469,3 +469,5 @@ Total con 20% descuento (pago adelantado): $${reservationDetails.totalWithDiscou
     </div>
   );
 }
+
+    

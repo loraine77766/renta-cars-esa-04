@@ -105,8 +105,8 @@ export default function ReservationForm({ car }: { car: Car }) {
   const imageList = car.imageUrls && car.imageUrls.length > 0 ? car.imageUrls : [car.imageUrl];
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    const fromDate = format(values.pickupDate, 'yyyy-MM-dd');
-    const toDate = format(values.dropoffDate, 'yyyy-MM-dd');
+    const fromDate = values.pickupDate.toISOString();
+    const toDate = values.dropoffDate.toISOString();
     router.push(`/confirmacion?carId=${car.id}&from=${fromDate}&to=${toDate}&pickupLocation=${values.pickupLocation}&dropoffLocation=${values.dropoffLocation}&pickupTime=${values.pickupTime}&dropoffTime=${values.dropoffTime}`);
   }
 
@@ -380,3 +380,5 @@ export default function ReservationForm({ car }: { car: Car }) {
     </div>
   );
 }
+
+    
