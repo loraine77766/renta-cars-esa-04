@@ -11,9 +11,19 @@ import { Button } from '@/components/ui/button';
 
 export default function Home() {
   const sortedCars = [...cars].sort((a, b) => a.pricePerDay - b.pricePerDay);
+  
+  // Find the cheapest car
   const cheapestCar = sortedCars[0];
-  const midPriceCars = sortedCars.filter(c => c.pricePerDay > cheapestCar.pricePerDay).slice(0, 2);
-  const recommendedCars = [cheapestCar, ...midPriceCars].filter(Boolean);
+  
+  // Find two other cars that are not the recently added ones
+  const otherCars = sortedCars.filter(c => 
+    c.id !== cheapestCar.id && 
+    c.id !== 13 && // Kia Picanto (Grande)
+    c.id !== 14   // Kia Rio
+  ).slice(0, 2);
+
+  const recommendedCars = [cheapestCar, ...otherCars].filter(Boolean);
+
 
   const howToSteps = [
     {
