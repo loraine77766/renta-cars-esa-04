@@ -88,17 +88,19 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
 
   useEffect(() => {
     try {
-      const startDateTimeStr = `${format(startDate, 'yyyy-MM-dd')} ${pickupTime}`;
-      const endDateTimeStr = `${format(endDate, 'yyyy-MM-dd')} ${dropoffTime}`;
-      
-      const startDateTime = parse(startDateTimeStr, 'yyyy-MM-dd HH:mm', new Date());
-      const endDateTime = parse(endDateTimeStr, 'yyyy-MM-dd HH:mm', new Date());
+      const startDateTime = new Date(startDate);
+      const [startHour, startMinute] = pickupTime.split(':').map(Number);
+      startDateTime.setHours(startHour, startMinute);
+
+      const endDateTime = new Date(endDate);
+      const [endHour, endMinute] = dropoffTime.split(':').map(Number);
+      endDateTime.setHours(endHour, endMinute);
 
       if (!isNaN(startDateTime.getTime()) && !isNaN(endDateTime.getTime())) {
-          setFormattedDates({
-              start: format(startDateTime, "EEE dd/MM/yyyy - HH:mm", { locale: es, timeZone: 'UTC' }),
-              end: format(endDateTime, "EEE dd/MM/yyyy - HH:mm", { locale: es, timeZone: 'UTC' }),
-          });
+        setFormattedDates({
+          start: format(startDateTime, "EEE dd/MM/yyyy - HH:mm", { locale: es }),
+          end: format(endDateTime, "EEE dd/MM/yyyy - HH:mm", { locale: es }),
+        });
       } else {
         setFormattedDates({ start: 'Fecha inválida', end: 'Fecha inválida' });
       }
