@@ -86,7 +86,7 @@ export default function ReservationForm({ car }: { car: Car }) {
   
   useEffect(() => {
     if (pickupDate && dropoffDate && dropoffDate >= pickupDate) {
-      const days = differenceInDays(dropoffDate, pickupDate);
+      const days = differenceInDays(dropoffDate, pickupDate) + 1;
       setReservationDetails(calculateReservationDetails(days, car.pricePerDay));
       trigger("dropoffDate");
     } else {
