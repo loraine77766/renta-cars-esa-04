@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Trash2, Calendar, Car } from 'lucide-react';
 import Image from 'next/image';
-import { differenceInCalendarDays, format, parseISO } from 'date-fns';
+import { differenceInDays, format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
@@ -64,7 +64,7 @@ export default function MisRentasPage() {
 
               const startDate = parseISO(rental.startDate);
               const endDate = parseISO(rental.endDate);
-              const rentalDays = differenceInCalendarDays(endDate, startDate) + 1;
+              const rentalDays = differenceInDays(endDate, startDate) + 1;
               const totalPrice = rentalDays * car.pricePerDay;
 
               const confirmationUrl = `/confirmacion?carId=${car.id}&from=${rental.startDate}&to=${rental.endDate}&pickupLocation=Aeropuerto%20-%20Terminal%203&dropoffLocation=Aeropuerto%20-%20Terminal%203&pickupTime=10:00&dropoffTime=10:00`;
