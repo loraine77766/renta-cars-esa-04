@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { format, differenceInDays, addDays } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 
@@ -122,7 +122,7 @@ export default function ReservationForm({ car }: { car: Car }) {
                 <Info className="h-4 w-4 text-accent" />
                 <AlertTitle className="font-bold text-accent">Nota importante</AlertTitle>
                 <AlertDescription>
-                    Las reservas deben realizarse con al menos 24 horas de antelación. Se pueden recoger autos en otros lugares con un cargo adicional.
+                    Se pueden recoger autos en otros lugares con un cargo adicional.
                 </AlertDescription>
             </Alert>
             <Form {...form}>
@@ -171,7 +171,7 @@ export default function ReservationForm({ car }: { car: Car }) {
                                             mode="single"
                                             selected={field.value}
                                             onSelect={field.onChange}
-                                            disabled={(date) => date < addDays(new Date(), 1)}
+                                            disabled={(date) => date < new Date()}
                                             initialFocus
                                         />
                                     </PopoverContent>

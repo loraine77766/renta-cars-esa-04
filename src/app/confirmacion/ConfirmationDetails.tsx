@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { format, differenceInYears, parse, addDays, parseISO } from 'date-fns';
+import { format, differenceInYears, parse } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -373,7 +373,7 @@ Total con 20% descuento (pago adelantado): $${reservationDetails.totalWithDiscou
                             <DialogHeader>
                                 <DialogTitle>Modificar reserva</DialogTitle>
                             </DialogHeader>
-                            <p className="text-sm text-muted-foreground">Importante: 21 años es la edad mínima permitida para rentar un auto en Cuba. Las reservas deben realizarse con al menos 24 horas de antelación.</p>
+                            <p className="text-sm text-muted-foreground">Importante: 21 años es la edad mínima permitida para rentar un auto en Cuba.</p>
                             <Form {...modifyForm}>
                                 <form onSubmit={modifyForm.handleSubmit(onModify)} className="space-y-4">
                                      <FormField
@@ -396,7 +396,7 @@ Total con 20% descuento (pago adelantado): $${reservationDetails.totalWithDiscou
                                                     mode="single"
                                                     selected={field.value}
                                                     onSelect={field.onChange}
-                                                    disabled={(date) => date < addDays(new Date(), 1)}
+                                                    disabled={(date) => date < new Date()}
                                                     initialFocus
                                                 />
                                             </PopoverContent>
