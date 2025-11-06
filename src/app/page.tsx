@@ -15,14 +15,13 @@ export default function Home() {
   // Find the cheapest car
   const cheapestCar = sortedCars[0];
   
-  // Find two other cars that are not the recently added ones
-  const otherCars = sortedCars.filter(c => 
-    c.id !== cheapestCar.id && 
-    c.id !== 13 && // Kia Picanto (Grande)
-    c.id !== 14   // Kia Rio
-  ).slice(0, 2);
+  // Find the new Toyota Corolla
+  const corolla = cars.find(c => c.id === 15);
+  
+  // Find one other car that isn't the cheapest or the corolla
+  const otherCar = sortedCars.find(c => c.id !== cheapestCar.id && c.id !== corolla?.id);
 
-  const recommendedCars = [cheapestCar, ...otherCars].filter(Boolean);
+  const recommendedCars = [cheapestCar, corolla, otherCar].filter((c): c is NonNullable<typeof c> => c !== undefined);
 
 
   const howToSteps = [

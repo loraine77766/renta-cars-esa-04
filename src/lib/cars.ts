@@ -250,9 +250,9 @@ export const cars: Car[] = [
     name: 'Toyota Corolla',
     description: 'Un sedán confiable y popular, conocido por su comodidad, eficiencia y excelentes prestaciones.',
     pricePerDay: 75,
-    imageUrl: '/images/images/toyota-corolla.jpg',
+    imageUrl: '/images/images/ToyotaCorola.jpg',
     imageHint: 'sedan modern white',
-    features: ['5 Pasajeros', 'Automático', 'Clima', 'Audio', 'Cámara Trasera', 'Tanque Lleno', 'Tarjeta Combustible 100L'],
+    features: ['5 Pasajeros', 'Automático', 'Bueno aire', 'Bueno audio', 'Neumáticos en perfecto estado', 'Gato hidráulico', 'Cámara(delantera y trasera)', 'Tanque lleno', 'Tarjeta de combustible 100 lt'],
      details: {
       additionalCharges: [
         'Los cargos adicionales son abonados directamente a la compañía rentadora mediante tarjeta en el momento a la apertura del contrato. No se admitirán pagos en efectivo.'
