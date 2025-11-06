@@ -246,6 +246,39 @@ export const cars: Car[] = [
     }
   },
   {
+    id: 15,
+    name: 'Toyota Corolla',
+    description: 'Un sedán confiable y popular, conocido por su comodidad, eficiencia y excelentes prestaciones.',
+    pricePerDay: 75,
+    imageUrl: '/images/images/toyota-corolla.jpg',
+    imageHint: 'sedan modern white',
+    features: ['5 Pasajeros', 'Automático', 'Clima', 'Audio', 'Cámara Trasera', 'Tanque Lleno', 'Tarjeta Combustible 100L'],
+     details: {
+      additionalCharges: [
+        'Los cargos adicionales son abonados directamente a la compañía rentadora mediante tarjeta en el momento a la apertura del contrato. No se admitirán pagos en efectivo.'
+      ],
+      notIncluded: [
+        'Conductor adicional (Max. 2, precio por chofer por día: 3.50 USD).',
+        'Depósito de garantía.'
+      ],
+      included: [
+        'Seguro diario.',
+        'Depósito de Combustible.',
+        'Tasa de Aeropuerto (20.00 USD si aplica).'
+      ],
+      pickupAndDropoff: [
+        'Si su hora de DEVOLUCIÓN al momento de reservar es más de 4 horas que su hora de RECOGIDA el sistema cargara 1 día adicional a su reserva automáticamente. Asegúrese de entregar el auto a la hora establecida.'
+      ],
+      notes: [
+        'A conductores entre 21-24 años y 75-80 años de edad se le incrementará el costo del seguro en un 50%.',
+        'Renta Cars ESA solo confirma categorías, no marcas y/o modelos específicos.',
+        'Mínimo de renta: 3 días.',
+        'Costo de seguro por día: $30.00 USD.',
+        'Costo de combustible (única vez): $65.00 USD.'
+      ]
+    }
+  },
+  {
     id: 5,
     name: 'Dongfeng Aeolus Yixuan',
     description: 'Un sedán moderno y espacioso, ideal para viajes cómodos en carretera.',
