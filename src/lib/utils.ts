@@ -15,7 +15,23 @@ export function calculateReservationDetails(startDate: Date, endDate: Date, pric
   const rentalDays = differenceInDays(endDate, startDate);
 
   if (rentalDays <= 0) {
-    return null;
+    // Treat same-day rental as 1 day
+    const singleDayPrice = pricePerDay;
+    const deposit = 250;
+    const discountPercentage = 0.20;
+    const discountedRentPrice = singleDayPrice * (1 - discountPercentage);
+    const discountAmount = singleDayPrice - discountedRentPrice;
+    const totalWithoutDiscount = singleDayPrice + deposit;
+    const totalWithDiscount = discountedRentPrice + deposit;
+    
+    return {
+      rentalDays: 1,
+      rentPrice: singleDayPrice,
+      deposit,
+      totalWithDiscount,
+      totalWithoutDiscount,
+      discountAmount
+    };
   }
 
   const rentPrice = rentalDays * pricePerDay;
