@@ -1,6 +1,6 @@
 
 import { redirect } from 'next/navigation';
-import { differenceInCalendarDays, isValid, parseISO } from 'date-fns';
+import { differenceInDays, isValid, parseISO } from 'date-fns';
 import type { Metadata } from 'next';
 
 import Header from '@/components/Header';
@@ -41,12 +41,7 @@ export default function ConfirmationPage({
     redirect('/');
   }
   
-  const rentalDays = differenceInCalendarDays(endDate, startDate) + 1;
-  if (rentalDays <= 0) {
-      redirect('/');
-  }
-  
-  const reservationDetails: ReservationDetailsType | null = calculateReservationDetails(rentalDays, car.pricePerDay);
+  const reservationDetails: ReservationDetailsType | null = calculateReservationDetails(startDate, endDate, car.pricePerDay);
 
   if (!reservationDetails) {
      redirect('/');
