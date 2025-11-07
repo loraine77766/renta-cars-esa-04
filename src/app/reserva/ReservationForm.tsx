@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -7,7 +5,7 @@ import Image from 'next/image';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { format, differenceInDays } from 'date-fns';
+import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 
@@ -85,9 +83,8 @@ export default function ReservationForm({ car }: { car: Car }) {
   const [reservationDetails, setReservationDetails] = useState<ReservationDetails | null>(null);
   
   useEffect(() => {
-    if (pickupDate && dropoffDate && dropoffDate >= pickupDate) {
-      const days = differenceInDays(dropoffDate, pickupDate) + 1;
-      setReservationDetails(calculateReservationDetails(days, car.pricePerDay));
+    if (pickupDate && dropoffDate && dropoffDate > pickupDate) {
+      setReservationDetails(calculateReservationDetails(pickupDate, dropoffDate, car.pricePerDay));
       trigger("dropoffDate");
     } else {
       setReservationDetails(null);
@@ -97,16 +94,15 @@ export default function ReservationForm({ car }: { car: Car }) {
 
   const minRentDaysString = car.details?.notes.find(n => n.includes('Mínimo de renta'));
   const minRentDaysMatch = minRentDaysString ? minRentDaysString.match(/\d+/) : null;
-  const minRentDays = minRentDaysMatch ? parseInt(minRentDaysMatch[0], 10) : 3;
-  const requiresMinDays = !!minRentDaysString;
+  const minRentDays = minRentDaysMatch ? parseInt(minRentDaysMatch[0], 10) : 1; // Default to 1 if not specified
 
-  const isDateRangeValid = !!reservationDetails && reservationDetails.rentalDays > 0 && (!requiresMinDays || reservationDetails.rentalDays >= minRentDays);
+  const isDateRangeValid = !!reservationDetails && reservationDetails.rentalDays > 0 && reservationDetails.rentalDays >= minRentDays;
   
   const imageList = car.imageUrls && car.imageUrls.length > 0 ? car.imageUrls : [car.imageUrl];
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    const fromDate = values.pickupDate.toISOString();
-    const toDate = values.dropoffDate.toISOString();
+    const fromDate = values.pickupDate.toISOString().split('T')[0];
+    const toDate = values.dropoffDate.toISOString().split('T')[0];
     router.push(`/confirmacion?carId=${car.id}&from=${fromDate}&to=${toDate}&pickupLocation=${values.pickupLocation}&dropoffLocation=${values.dropoffLocation}&pickupTime=${values.pickupTime}&dropoffTime=${values.dropoffTime}`);
   }
 
@@ -171,7 +167,7 @@ export default function ReservationForm({ car }: { car: Car }) {
                                             mode="single"
                                             selected={field.value}
                                             onSelect={field.onChange}
-                                            disabled={(date) => date < new Date()}
+                                            disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                                             initialFocus
                                         />
                                     </PopoverContent>
@@ -380,5 +376,3 @@ export default function ReservationForm({ car }: { car: Car }) {
     </div>
   );
 }
-
-    

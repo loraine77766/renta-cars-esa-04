@@ -1,7 +1,5 @@
-
-
 import { redirect } from 'next/navigation';
-import { differenceInDays, isValid, parseISO } from 'date-fns';
+import { isValid, parseISO } from 'date-fns';
 import type { Metadata } from 'next';
 
 import Header from '@/components/Header';
@@ -38,16 +36,11 @@ export default function ConfirmationPage({
   const startDate = parseISO(from);
   const endDate = parseISO(to);
 
-  if (!isValid(startDate) || !isValid(endDate) || endDate < startDate) {
+  if (!isValid(startDate) || !isValid(endDate) || endDate <= startDate) {
     redirect('/');
   }
   
-  const rentalDays = differenceInDays(endDate, startDate) + 1;
-  if (rentalDays <= 0) {
-      redirect('/');
-  }
-  
-  const reservationDetails: ReservationDetailsType | null = calculateReservationDetails(rentalDays, car.pricePerDay);
+  const reservationDetails: ReservationDetailsType | null = calculateReservationDetails(startDate, endDate, car.pricePerDay);
 
   if (!reservationDetails) {
      redirect('/');

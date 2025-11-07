@@ -1,5 +1,5 @@
 import { clsx, type ClassValue } from "clsx"
-import { differenceInDays } from "date-fns";
+import { differenceInDays, parseISO, isValid } from "date-fns";
 import { twMerge } from "tailwind-merge"
 import type { ReservationDetails } from "./types";
 
@@ -7,7 +7,13 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function calculateReservationDetails(rentalDays: number, pricePerDay: number): ReservationDetails | null {
+export function calculateReservationDetails(startDate: Date, endDate: Date, pricePerDay: number): ReservationDetails | null {
+  if (!isValid(startDate) || !isValid(endDate) || endDate < startDate) {
+    return null;
+  }
+
+  const rentalDays = differenceInDays(endDate, startDate);
+
   if (rentalDays <= 0) {
     return null;
   }
