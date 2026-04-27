@@ -139,6 +139,39 @@ export const cars: Car[] = [
     }
   },
   {
+    id: 16,
+    name: 'SWM G05',
+    description: 'Un SUV espacioso y versátil con capacidad para 7 pasajeros, ideal para familias y grupos grandes.',
+    pricePerDay: 120,
+    imageUrl: '/images/images/swm-g05.jpg',
+    imageHint: 'suv family white',
+    features: ['7 Pasajeros', 'Automático', 'Motor 1.5L Turbo', 'Gasolina', 'Clima', 'Techo Panorámico', 'Pantalla Táctil 12"', 'Chapa ESA'],
+    details: {
+      additionalCharges: [
+        'Los cargos adicionales son abonados directamente a la compañía rentadora mediante tarjeta en el momento a la apertura del contrato. No se admitirán pagos en efectivo.'
+      ],
+      notIncluded: [
+        'Conductor adicional (Max. 2, precio por chofer por día: 3.50 USD).',
+        'Depósito de garantía.'
+      ],
+      included: [
+        'Seguro diario.',
+        'Depósito de Combustible.',
+        'Tasa de Aeropuerto (20.00 USD si aplica).'
+      ],
+      pickupAndDropoff: [
+        'Si su hora de DEVOLUCIÓN al momento de reservar es más de 4 horas que su hora de RECOGIDA el sistema cargara 1 día adicional a su reserva automáticamente. Asegúrese de entregar el auto a la hora establecida.'
+      ],
+      notes: [
+        'A conductores entre 21-24 años y 75-80 años de edad se le incrementará el costo del seguro en un 50%.',
+        'Renta Cars ESA solo confirma categorías, no marcas y/o modelos específicos.',
+        'Mínimo de renta: 3 días.',
+        'Costo de seguro por día: $35.00 USD.',
+        'Costo de combustible (única vez): $75.00 USD.'
+      ]
+    }
+  },
+  {
     id: 4,
     name: 'Kia Picanto',
     description: 'Pequeño, ágil y fácil de estacionar. La mejor opción para moverse por calles estrechas.',
