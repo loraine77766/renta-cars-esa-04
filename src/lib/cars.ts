@@ -40,44 +40,11 @@ export const cars: Car[] = [
     id: 12,
     name: 'Bestune T90',
     description: 'Un SUV espacioso y lujoso, perfecto para viajes largos con la familia.',
-    pricePerDay: 120,
+    pricePerDay: 110,
     originalPricePerDay: 140,
     imageUrl: '/images/images/t90.jpg',
     imageHint: 'suv luxury white',
     features: ['4 Puertas', '5 Pasajeros', 'Automático', 'Gasolina', 'Clima', 'Maletero', 'Seguro incluido', 'Chapa ESA'],
-    details: {
-      additionalCharges: [
-        'Los cargos adicionales son abonados directamente a la compañía rentadora mediante tarjeta en el momento a la apertura del contrato. No se admitirán pagos en efectivo.'
-      ],
-      notIncluded: [
-        'Conductor adicional (Max. 2, precio por chofer por día: 3.50 USD).',
-        'Depósito de garantía.'
-      ],
-      included: [
-        'Seguro diario.',
-        'Depósito de Combustible.',
-        'Tasa de Aeropuerto (20.00 USD si aplica).'
-      ],
-      pickupAndDropoff: [
-        'Si su hora de DEVOLUCIÓN al momento de reservar es más de 4 horas que su hora de RECOGIDA el sistema cargara 1 día adicional a su reserva automáticamente. Asegúrese de entregar el auto a la hora establecida.'
-      ],
-      notes: [
-        'A conductores entre 21-24 años y 75-80 años de edad se le incrementará el costo del seguro en un 50%.',
-        'Renta Cars ESA solo confirma categorías, no marcas y/o modelos específicos.',
-        'Mínimo de renta: 3 días.',
-        'Costo de seguro por día: $30.00 USD.',
-        'Costo de combustible (única vez): $65.00 USD.'
-      ]
-    }
-  },
-  {
-    id: 16,
-    name: 'Bestune T99',
-    description: 'Un SUV espacioso de 7 asientos, perfecto para grupos grandes y familias que buscan comodidad y estilo.',
-    pricePerDay: 120,
-    imageUrl: '/images/images/bestune-t99.jpg',
-    imageHint: 'suv large white',
-    features: ['4 Puertas', '7 Pasajeros', 'Automático', 'Gasolina', 'Clima', 'Maletero grande', 'Seguro incluido', 'Chapa ESA'],
     details: {
       additionalCharges: [
         'Los cargos adicionales son abonados directamente a la compañía rentadora mediante tarjeta en el momento a la apertura del contrato. No se admitirán pagos en efectivo.'
