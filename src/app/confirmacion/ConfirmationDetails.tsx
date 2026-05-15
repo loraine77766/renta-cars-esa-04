@@ -22,7 +22,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, PartyPopper, Download, FileText } from 'lucide-react';
+import { CalendarIcon, PartyPopper, Download, FileText, Loader2 } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -30,6 +30,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
+import { useToast } from '@/hooks/use-toast';
 
 interface ConfirmationDetailsProps {
   car: Car;
@@ -80,11 +81,12 @@ const modifySchema = z.object({
 
 export default function ConfirmationDetails({ car, startDate, endDate, pickupLocation, dropoffLocation, pickupTime, dropoffTime, reservationDetails }: ConfirmationDetailsProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const firestore = useFirestore();
+  const { toast } = useToast();
   const [formattedDates, setFormattedDates] = useState({ start: '', end: '' });
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const imageList = car.imageUrls && car.imageUrls.length > 0 ? car.imageUrls : [car.imageUrl];
 
@@ -192,8 +194,16 @@ Gracias por confiar en Renta Cars ESA.
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!firestore) return;
+    if (!firestore) {
+      toast({
+        variant: "destructive",
+        title: "Error de conexión",
+        description: "No se pudo conectar con la base de datos. Inténtalo más tarde.",
+      });
+      return;
+    }
 
+    setIsSubmitting(true);
     try {
       // Guardar en Firestore
       const docRef = await addDoc(collection(firestore, 'pedidos'), {
@@ -241,8 +251,15 @@ ${paymentConcept}: $${amountToPay.toFixed(2)}
       const whatsappUrl = `https://wa.me/15879120936?text=${encodeURIComponent(message.trim())}`;
       window.open(whatsappUrl, '_blank');
       setIsConfirmationDialogOpen(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving order:", error);
+      toast({
+        variant: "destructive",
+        title: "Error al guardar",
+        description: "Ocurrió un error al registrar tu pedido: " + error.message,
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -286,7 +303,7 @@ ${paymentConcept}: $${amountToPay.toFixed(2)}
                                          <FormMessage>{form.formState.errors.birthYear?.message}</FormMessage>
                                     </FormItem>
                                     <FormField control={form.control} name="phone" render={({ field }) => (
-                                        <FormItem><FormLabel>Teléfono *</FormLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormItem>
+                                        <FormItem><FormLabel>Teléfono *</FormLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormMessage></FormItem>
                                     )}/>
                                     <FormField control={form.control} name="country" render={({ field }) => (
                                         <FormItem><FormLabel>País *</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
@@ -349,8 +366,19 @@ ${paymentConcept}: $${amountToPay.toFixed(2)}
                                 <p className="text-sm text-muted-foreground text-center mt-4 mb-4">
                                     Es importante que los datos de contacto (e-mail/teléfono) sean correctos para poder confirmar tu reserva. Sin ésta confirmación por parte de Atención al Cliente (+1 587 912-0936), la reserva no será válida.
                                 </p>
-                                <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-lg py-6 shadow-lg transform transition-transform active:scale-95">
-                                    Confirmar y Pagar por WhatsApp
+                                <Button 
+                                  type="submit" 
+                                  className="w-full bg-accent hover:bg-accent/90 text-lg py-6 shadow-lg transform transition-transform active:scale-95"
+                                  disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? (
+                                      <>
+                                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                        Registrando pedido...
+                                      </>
+                                    ) : (
+                                      'Confirmar y Pagar por WhatsApp'
+                                    )}
                                 </Button>
                             </form>
                         </Form>

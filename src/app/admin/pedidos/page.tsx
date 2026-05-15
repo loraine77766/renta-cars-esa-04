@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useFirestore, useCollection } from '@/firebase/index';
@@ -9,19 +9,31 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Trash2, Phone, Mail, Loader2, ClipboardList, Lock } from 'lucide-react';
+import { Trash2, Phone, Mail, Loader2, ClipboardList, Lock, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AdminPedidosPage() {
   const [password, setPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginError, setLoginError] = useState('');
+  const { toast } = useToast();
   
   const firestore = useFirestore();
-  const pedidosQuery = firestore && isAuthenticated ? query(collection(firestore, 'pedidos'), orderBy('createdAt', 'desc')) : null;
+  
+  // Memoize the query to prevent unnecessary re-subscriptions
+  const pedidosQuery = useMemo(() => {
+    if (!firestore || !isAuthenticated) return null;
+    try {
+      return query(collection(firestore, 'pedidos'), orderBy('createdAt', 'desc'));
+    } catch (e) {
+      console.error("Error creating query:", e);
+      return null;
+    }
+  }, [firestore, isAuthenticated]);
+
   const { data: pedidos, loading, error } = useCollection(pedidosQuery);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
@@ -119,15 +131,24 @@ export default function AdminPedidosPage() {
             {loading ? (
               <div className="flex flex-col items-center justify-center py-20 gap-4">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                <p className="text-muted-foreground">Cargando pedidos...</p>
+                <p className="text-muted-foreground animate-pulse">Consultando base de datos...</p>
               </div>
             ) : error ? (
-              <div className="p-8 text-center text-destructive">
-                Error al cargar los pedidos. Por favor, intenta de nuevo.
+              <div className="p-20 text-center flex flex-col items-center gap-4">
+                <AlertTriangle className="h-12 w-12 text-destructive" />
+                <div className="text-destructive font-semibold">Error al conectar con la base de datos</div>
+                <p className="text-sm text-muted-foreground max-w-xs">{error.message}</p>
+                <Button variant="outline" onClick={() => window.location.reload()}>Reintentar</Button>
               </div>
             ) : pedidos && pedidos.length === 0 ? (
-              <div className="p-20 text-center text-muted-foreground">
-                No hay pedidos registrados todavía.
+              <div className="p-20 text-center flex flex-col items-center gap-4">
+                <div className="bg-secondary/50 p-6 rounded-full">
+                   <ClipboardList className="h-12 w-12 text-muted-foreground/50" />
+                </div>
+                <h3 className="text-xl font-bold text-primary">No hay pedidos</h3>
+                <p className="text-muted-foreground max-w-xs mx-auto">
+                  Aún no se ha registrado ninguna reserva en la plataforma.
+                </p>
               </div>
             ) : (
               <div className="overflow-x-auto">
