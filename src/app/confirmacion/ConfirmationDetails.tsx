@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,7 +9,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase/index';
 
 import type { Car, ReservationDetails } from '@/lib/types';
@@ -18,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
-import { Download, Loader2, MessageCircle, CheckCircle2 } from 'lucide-react';
+import { Download, Loader2, MessageCircle, CheckCircle2, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ConfirmationDetailsProps {
@@ -35,7 +36,7 @@ interface ConfirmationDetailsProps {
 const formSchema = z.object({
   name: z.string().min(2, { message: 'El nombre es requerido.' }),
   lastName1: z.string().min(2, { message: 'El primer apellido es requerido.' }),
-  lastName2: z.string().optional(),
+  lastName2: z.string().default(''),
   birthDay: z.string().min(1, 'Día requerido'),
   birthMonth: z.string().min(1, 'Mes requerido'),
   birthYear: z.string().min(4, 'Año requerido'),
@@ -44,7 +45,7 @@ const formSchema = z.object({
   passport: z.string().min(5, { message: 'El número de pasaporte es requerido.' }),
   driversLicense: z.string().min(5, { message: 'El número de licencia es requerido.' }),
   email: z.string().email({ message: 'El correo electrónico no es válido.' }),
-  paymentOption: z.enum(['deposit', 'full_payment']),
+  paymentOption: z.enum(['deposit', 'full_payment']).default('deposit'),
 }).refine(data => {
     try {
         const day = parseInt(data.birthDay);
@@ -146,27 +147,62 @@ Depósito Garantía: $250.00
     `.trim();
   };
 
-  const downloadInvoice = () => {
-    if (!orderId) return;
-    const values = form.getValues();
-    const markdown = generateInvoiceMarkdown(values, orderId);
-    const blob = new Blob([markdown], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `factura-${orderId}.md`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  const handleAction = async (type: 'invoice' | 'whatsapp') => {
+    const isValid = await form.trigger();
+    if (!isValid) return;
 
-  const handleWhatsAppPayment = () => {
-    if (!orderId) return;
-    const values = form.getValues();
-    const message = `
+    if (!firestore) return;
+    setIsSubmitting(true);
+
+    try {
+      let currentId = orderId;
+      const values = form.getValues();
+
+      if (!isRegistered) {
+        currentId = generateOrderId();
+        // Verificar si el ID ya existe (muy improbable, pero por seguridad)
+        const docSnap = await getDoc(doc(firestore, 'pedidos', currentId));
+        if (docSnap.exists()) {
+          currentId = generateOrderId();
+        }
+
+        await setDoc(doc(firestore, 'pedidos', currentId), {
+          id: currentId,
+          customerName: `${values.name} ${values.lastName1}`,
+          customerEmail: values.email,
+          customerPhone: values.phone,
+          customerPassport: values.passport,
+          customerLicense: values.driversLicense,
+          customerCountry: values.country,
+          carName: car.name,
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          pickupLocation,
+          dropoffLocation,
+          totalAmount: amountToPay,
+          paymentOption: values.paymentOption,
+          createdAt: serverTimestamp(),
+        });
+        setOrderId(currentId);
+        setIsRegistered(true);
+      }
+
+      if (type === 'invoice' && currentId) {
+        const markdown = generateInvoiceMarkdown(values, currentId);
+        const blob = new Blob([markdown], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `factura-${currentId}.md`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast({ title: "Factura descargada correctamente" });
+      } else if (type === 'whatsapp' && currentId) {
+        const message = `
 ¡Hola! Quiero confirmar mi reserva:
 -----------------------------------
-ID PEDIDO: ${orderId}
+ID PEDIDO: ${currentId}
 -----------------------------------
 Vehículo: ${car.name}
 Conductor: ${values.name} ${values.lastName1}
@@ -178,97 +214,37 @@ Devolución: ${formattedDates.end}
 -----------------------------------
 PAGO: $${amountToPay.toFixed(2)} (${paymentConcept})
 -----------------------------------
-Ya descargué mi factura proforma.
-    `.trim();
-    window.open(`https://wa.me/15879120936?text=${encodeURIComponent(message)}`, '_blank');
-  };
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!firestore) return;
-    setIsSubmitting(true);
-    try {
-      const newId = generateOrderId();
-      await setDoc(doc(firestore, 'pedidos', newId), {
-        id: newId,
-        customerName: `${values.name} ${values.lastName1}`,
-        customerEmail: values.email,
-        customerPhone: values.phone,
-        customerPassport: values.passport,
-        customerLicense: values.driversLicense,
-        customerCountry: values.country,
-        carName: car.name,
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        pickupLocation,
-        dropoffLocation,
-        totalAmount: amountToPay,
-        paymentOption: values.paymentOption,
-        createdAt: serverTimestamp(),
-      });
-
-      setOrderId(newId);
-      setIsRegistered(true);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (error: any) {
-      console.error("Error saving order:", error);
-      toast({ variant: "destructive", title: "Error al registrar pedido" });
+Ya tengo mi factura proforma.
+        `.trim();
+        window.open(`https://wa.me/15879120936?text=${encodeURIComponent(message)}`, '_blank');
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      toast({ variant: "destructive", title: "Error al procesar la solicitud" });
     } finally {
       setIsSubmitting(false);
     }
-  }
-
-  if (isRegistered) {
-    return (
-      <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in zoom-in duration-500">
-        <Card className="shadow-2xl border-2 border-primary/20 overflow-hidden">
-          <CardHeader className="bg-primary/5 text-center py-10">
-            <div className="flex justify-center mb-4">
-              <CheckCircle2 className="h-20 w-20 text-green-500" />
-            </div>
-            <CardTitle className="font-headline text-3xl text-primary">¡Pedido Registrado con Éxito!</CardTitle>
-            <p className="text-muted-foreground mt-2">Tu ID de pedido es: <strong className="text-primary font-mono text-xl">{orderId}</strong></p>
-          </CardHeader>
-          <CardContent className="p-8 space-y-12">
-            
-            <div className="bg-card p-6 rounded-xl border-2 border-primary/10 shadow-sm space-y-4">
-              <h3 className="font-bold text-primary uppercase text-xs tracking-widest text-center">Documento de Reserva</h3>
-              <Button 
-                onClick={downloadInvoice} 
-                className="w-full h-16 text-lg gap-3 bg-primary hover:bg-primary/90 shadow-md"
-              >
-                <Download className="h-6 w-6" /> Descargar Factura Proforma
-              </Button>
-              <p className="text-[10px] text-center text-muted-foreground">Este documento es necesario para el retiro del vehículo.</p>
-            </div>
-
-            <Separator />
-
-            <div className="bg-card p-6 rounded-xl border-2 border-green-100 shadow-sm space-y-4">
-              <h3 className="font-bold text-green-600 uppercase text-xs tracking-widest text-center">Finalizar Pago</h3>
-              <Button 
-                onClick={handleWhatsAppPayment}
-                className="w-full h-16 text-lg gap-3 bg-green-600 hover:bg-green-700 shadow-md"
-              >
-                <MessageCircle className="h-6 w-6" /> Pagar por WhatsApp
-              </Button>
-              <p className="text-[10px] text-center text-muted-foreground">Habla directamente con nuestro equipo de atención al cliente.</p>
-            </div>
-            
-            <div className="pt-4 text-center">
-              <Button variant="link" className="text-muted-foreground text-xs" onClick={() => router.push('/')}>
-                Volver a la página de inicio
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  };
 
   return (
-    <div className="max-w-6xl mx-auto">
-        <h1 className="font-headline text-3xl md:text-4xl font-bold text-primary mb-4 text-center">Finaliza tu Reserva</h1>
-        <p className="text-center text-muted-foreground mb-8">Completa tus datos para registrar el pedido en nuestro sistema 2026.</p>
+    <div className="max-w-6xl mx-auto px-4">
+        <h1 className="font-headline text-3xl md:text-4xl font-bold text-primary mb-2 text-center">Reserva tu Auto</h1>
+        <p className="text-center text-muted-foreground mb-8">Completa tus datos para registrar el pedido y obtener tu factura.</p>
+
+        {isRegistered && (
+          <Card className="mb-8 border-2 border-green-500 bg-green-50 dark:bg-green-900/10">
+            <CardContent className="flex flex-col md:flex-row items-center justify-between p-6 gap-4">
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="h-8 w-8 text-green-500 shrink-0" />
+                <div>
+                  <p className="font-bold text-green-700 dark:text-green-300">Pedido registrado con éxito</p>
+                  <p className="text-xs text-green-600 dark:text-green-400">ID de seguimiento: <span className="font-mono font-bold">{orderId}</span></p>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => router.push('/')}>Nueva Reserva</Button>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             <div className="lg:col-span-2 space-y-8">
@@ -278,7 +254,7 @@ Ya descargué mi factura proforma.
                     </CardHeader>
                     <CardContent className="pt-6">
                         <Form {...form}>
-                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                            <form className="space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <FormField control={form.control} name="name" render={({ field }) => (
                                         <FormItem><FormLabel>Nombre *</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
@@ -321,7 +297,7 @@ Ya descargué mi factura proforma.
                                 </div>
                                 
                                 <Separator />
-                                <h3 className="font-headline text-xl text-primary">Forma de Pago</h3>
+                                <h3 className="font-headline text-xl text-primary">Opción de Pago</h3>
                                 <FormField
                                     control={form.control}
                                     name="paymentOption"
@@ -332,7 +308,7 @@ Ya descargué mi factura proforma.
                                                 <label className={`block p-4 border rounded-lg cursor-pointer transition-all ${field.value === 'deposit' ? 'border-primary ring-2 ring-primary bg-primary/5' : 'border-border'}`}>
                                                     <input type="radio" {...field} value="deposit" checked={field.value === 'deposit'} className="sr-only" />
                                                     <h4 className="font-semibold">Solo Depósito ($250)</h4>
-                                                    <p className="text-xs text-muted-foreground">Asegura tu auto ahora.</p>
+                                                    <p className="text-xs text-muted-foreground">Reembolsable al entregar el auto.</p>
                                                 </label>
                                                 <label className={`block p-4 border rounded-lg cursor-pointer transition-all ${field.value === 'full_payment' ? 'border-primary ring-2 ring-primary bg-primary/5' : 'border-border'}`}>
                                                     <input type="radio" {...field} value="full_payment" checked={field.value === 'full_payment'} className="sr-only" />
@@ -345,18 +321,38 @@ Ya descargué mi factura proforma.
                                     )}
                                 />
 
-                                <div className="bg-secondary/30 p-4 rounded-lg text-center border border-dashed">
-                                    <p className="text-sm text-muted-foreground">Total a pagar ahora:</p>
-                                    <p className="font-bold text-3xl text-primary font-mono">${amountToPay.toFixed(2)}</p>
+                                <div className="bg-secondary/30 p-6 rounded-lg text-center border border-dashed border-primary/20">
+                                    <p className="text-sm text-muted-foreground mb-1">Total a pagar ahora:</p>
+                                    <p className="font-bold text-4xl text-primary font-mono">${amountToPay.toFixed(2)}</p>
                                 </div>
 
-                                <Button 
-                                  type="submit" 
-                                  className="w-full bg-accent hover:bg-accent/90 text-lg py-7 shadow-lg"
-                                  disabled={isSubmitting}
-                                >
-                                    {isSubmitting ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Registrando...</> : 'Registrar Pedido'}
-                                </Button>
+                                <div className="space-y-6 pt-4">
+                                  <div className="bg-primary/5 p-6 rounded-xl border-2 border-primary/10 shadow-sm space-y-4">
+                                    <p className="text-xs font-bold text-primary uppercase tracking-widest text-center">Paso A: Documentación</p>
+                                    <Button 
+                                      type="button"
+                                      onClick={() => handleAction('invoice')} 
+                                      className="w-full h-16 text-lg gap-3 bg-primary hover:bg-primary/90 shadow-lg"
+                                      disabled={isSubmitting}
+                                    >
+                                      {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin" /> : <><FileText className="h-6 w-6" /> Descargar Factura Proforma</>}
+                                    </Button>
+                                    <p className="text-[10px] text-center text-muted-foreground">Descarga este documento para presentarlo en la oficina de renta.</p>
+                                  </div>
+
+                                  <div className="bg-green-50 p-6 rounded-xl border-2 border-green-200 shadow-sm space-y-4">
+                                    <p className="text-xs font-bold text-green-600 uppercase tracking-widest text-center">Paso B: Pago Final</p>
+                                    <Button 
+                                      type="button"
+                                      onClick={() => handleAction('whatsapp')}
+                                      className="w-full h-16 text-lg gap-3 bg-green-600 hover:bg-green-700 shadow-lg text-white"
+                                      disabled={isSubmitting}
+                                    >
+                                      {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin" /> : <><MessageCircle className="h-6 w-6" /> Pagar por WhatsApp</>}
+                                    </Button>
+                                    <p className="text-[10px] text-center text-muted-foreground">Envía el ID de tu pedido para recibir el link de pago seguro.</p>
+                                  </div>
+                                </div>
                             </form>
                         </Form>
                     </CardContent>
@@ -365,7 +361,7 @@ Ya descargué mi factura proforma.
             
             <Card className="shadow-lg lg:sticky lg:top-24 border-2 border-primary/5">
                 <CardHeader className="bg-primary/5">
-                    <CardTitle className="font-headline text-xl text-primary">Resumen</CardTitle>
+                    <CardTitle className="font-headline text-xl text-primary">Resumen de Renta</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6 space-y-4">
                     <div className="relative h-40 w-full">
@@ -373,9 +369,9 @@ Ya descargué mi factura proforma.
                     </div>
                     <Table>
                         <TableBody>
-                            <TableRow><TableCell className="font-semibold p-2">Vehículo:</TableCell><TableCell className="p-2">{car.name}</TableCell></TableRow>
+                            <TableRow><TableCell className="font-semibold p-2">Auto:</TableCell><TableCell className="p-2">{car.name}</TableCell></TableRow>
                             <TableRow><TableCell className="font-semibold p-2">Días:</TableCell><TableCell className="p-2">{reservationDetails.rentalDays}</TableCell></TableRow>
-                            <TableRow><TableCell className="font-semibold p-2">Precio/Día:</TableCell><TableCell className="p-2">${car.pricePerDay}</TableCell></TableRow>
+                            <TableRow><TableCell className="font-semibold p-2">Lugar:</TableCell><TableCell className="p-2 text-xs">{pickupLocation.split(',')[0]}</TableCell></TableRow>
                         </TableBody>
                     </Table>
                     <Separator />
@@ -389,3 +385,4 @@ Ya descargué mi factura proforma.
     </div>
   );
 }
+
