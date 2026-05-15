@@ -45,8 +45,6 @@ const formSchema = z.object({
   passport: z.string().min(5, { message: 'El número de pasaporte es requerido.' }),
   driversLicense: z.string().min(5, { message: 'El número de licencia es requerido.' }),
   email: z.string().email({ message: 'El correo electrónico no es válido.' }),
-  flightNumber: z.string().optional(),
-  airline: z.string().optional(),
   paymentOption: z.enum(['deposit', 'full_payment']),
 }).refine(data => {
     try {
@@ -71,11 +69,9 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
   
   useEffect(() => {
     try {
-      const startDateTime = new Date(startDate);
-      const endDateTime = new Date(endDate);
       setFormattedDates({
-        start: format(startDateTime, "EEE dd/MM/yyyy", { locale: es }) + " - " + pickupTime,
-        end: format(endDateTime, "EEE dd/MM/yyyy", { locale: es }) + " - " + dropoffTime,
+        start: format(startDate, "EEE dd/MM/yyyy", { locale: es }) + " - " + pickupTime,
+        end: format(endDate, "EEE dd/MM/yyyy", { locale: es }) + " - " + dropoffTime,
       });
     } catch (e) {
       console.error("Error formatting dates:", e);
@@ -93,8 +89,6 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
       passport: '',
       driversLicense: '',
       email: '',
-      flightNumber: '',
-      airline: '',
       paymentOption: 'deposit',
     },
   });
@@ -189,13 +183,11 @@ Ya descargué mi factura proforma.
       await setDoc(doc(firestore, 'pedidos', newId), {
         id: newId,
         customerName: `${values.name} ${values.lastName1}`,
-        customerLastName2: values.lastName2 || '',
         customerEmail: values.email,
         customerPhone: values.phone,
         customerPassport: values.passport,
         customerLicense: values.driversLicense,
         customerCountry: values.country,
-        customerBirthDate: `${values.birthYear}-${values.birthMonth}-${values.birthDay}`,
         carName: car.name,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
@@ -253,7 +245,6 @@ Ya descargué mi factura proforma.
                                                 <FormControl><Input placeholder="Año" type="number" {...field} /></FormControl>
                                             )}/>
                                         </div>
-                                        <FormMessage />
                                     </div>
                                     <FormField control={form.control} name="phone" render={({ field }) => (
                                         <FormItem><FormLabel>WhatsApp/Teléfono *</FormLabel><FormControl><Input placeholder="+1..." {...field} /></FormControl><FormMessage /></FormItem>
