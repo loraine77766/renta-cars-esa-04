@@ -23,7 +23,6 @@ export default function AdminPedidosPage() {
   
   const firestore = useFirestore();
   
-  // Memoize the query to prevent unnecessary re-subscriptions
   const pedidosQuery = useMemo(() => {
     if (!firestore || !isAuthenticated) return null;
     try {
