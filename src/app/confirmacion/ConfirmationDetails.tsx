@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
-import { PartyPopper, Download, Loader2, MessageCircle, CheckCircle2 } from 'lucide-react';
+import { Download, Loader2, MessageCircle, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ConfirmationDetailsProps {
@@ -36,9 +36,9 @@ const formSchema = z.object({
   name: z.string().min(2, { message: 'El nombre es requerido.' }),
   lastName1: z.string().min(2, { message: 'El primer apellido es requerido.' }),
   lastName2: z.string().optional(),
-  birthDay: z.coerce.number({invalid_type_error: "Día inválido"}).min(1).max(31),
-  birthMonth: z.coerce.number({invalid_type_error: "Mes inválido"}).min(1).max(12),
-  birthYear: z.coerce.number({invalid_type_error: "Año inválido"}).min(1900),
+  birthDay: z.string().min(1, 'Día requerido'),
+  birthMonth: z.string().min(1, 'Mes requerido'),
+  birthYear: z.string().min(4, 'Año requerido'),
   phone: z.string().min(5, { message: 'El teléfono es requerido.' }),
   country: z.string().min(2, { message: 'El país es requerido.' }),
   passport: z.string().min(5, { message: 'El número de pasaporte es requerido.' }),
@@ -47,7 +47,10 @@ const formSchema = z.object({
   paymentOption: z.enum(['deposit', 'full_payment']),
 }).refine(data => {
     try {
-        const dateOfBirth = parse(`${data.birthYear}-${data.birthMonth}-${data.birthDay}`, 'yyyy-MM-dd', new Date());
+        const day = parseInt(data.birthDay);
+        const month = parseInt(data.birthMonth);
+        const year = parseInt(data.birthYear);
+        const dateOfBirth = new Date(year, month - 1, day);
         return !isNaN(dateOfBirth.getTime()) && differenceInYears(new Date(), dateOfBirth) >= 21;
     } catch {
         return false;
@@ -83,6 +86,9 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
       name: '',
       lastName1: '',
       lastName2: '',
+      birthDay: '',
+      birthMonth: '',
+      birthYear: '',
       phone: '',
       country: '',
       passport: '',
@@ -97,7 +103,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
   const paymentConcept = paymentOption === 'full_payment' ? `Pago Completo (20% Desc.)` : `Depósito de Reserva`;
 
   const generateOrderId = () => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Evitamos O, I, 0, 1 para evitar confusiones
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let result = '';
     for (let i = 0; i < 8; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -222,43 +228,35 @@ Ya descargué mi factura proforma.
             <CardTitle className="font-headline text-3xl text-primary">¡Pedido Registrado con Éxito!</CardTitle>
             <p className="text-muted-foreground mt-2">Tu ID de pedido es: <strong className="text-primary font-mono text-xl">{orderId}</strong></p>
           </CardHeader>
-          <CardContent className="p-8 space-y-10">
+          <CardContent className="p-8 space-y-12">
             
-            {/* BLOQUE 1: FACTURA (ARRIBA) */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="bg-primary text-white rounded-full h-6 w-6 flex items-center justify-center font-bold text-xs">1</div>
-                <h3 className="font-bold text-primary uppercase text-sm">Descarga tu comprobante</h3>
-              </div>
+            <div className="bg-card p-6 rounded-xl border-2 border-primary/10 shadow-sm space-y-4">
+              <h3 className="font-bold text-primary uppercase text-xs tracking-widest text-center">Documento de Reserva</h3>
               <Button 
                 onClick={downloadInvoice} 
-                className="w-full h-16 text-lg gap-3 bg-primary hover:bg-primary/90 shadow-lg"
+                className="w-full h-16 text-lg gap-3 bg-primary hover:bg-primary/90 shadow-md"
               >
                 <Download className="h-6 w-6" /> Descargar Factura Proforma
               </Button>
-              <p className="text-xs text-center text-muted-foreground">Guarda este documento para tus registros.</p>
+              <p className="text-[10px] text-center text-muted-foreground">Este documento es necesario para el retiro del vehículo.</p>
             </div>
 
             <Separator />
 
-            {/* BLOQUE 2: WHATSAPP (ABAJO) */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="bg-accent text-white rounded-full h-6 w-6 flex items-center justify-center font-bold text-xs">2</div>
-                <h3 className="font-bold text-accent uppercase text-sm">Coordina el pago</h3>
-              </div>
+            <div className="bg-card p-6 rounded-xl border-2 border-green-100 shadow-sm space-y-4">
+              <h3 className="font-bold text-green-600 uppercase text-xs tracking-widest text-center">Finalizar Pago</h3>
               <Button 
                 onClick={handleWhatsAppPayment}
-                className="w-full h-16 text-lg gap-3 bg-green-600 hover:bg-green-700 shadow-lg"
+                className="w-full h-16 text-lg gap-3 bg-green-600 hover:bg-green-700 shadow-md"
               >
                 <MessageCircle className="h-6 w-6" /> Pagar por WhatsApp
               </Button>
-              <p className="text-xs text-center text-muted-foreground">Serás atendido por nuestro equipo de Atención al Cliente.</p>
+              <p className="text-[10px] text-center text-muted-foreground">Habla directamente con nuestro equipo de atención al cliente.</p>
             </div>
             
-            <div className="pt-6">
-              <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => router.push('/')}>
-                Volver al inicio
+            <div className="pt-4 text-center">
+              <Button variant="link" className="text-muted-foreground text-xs" onClick={() => router.push('/')}>
+                Volver a la página de inicio
               </Button>
             </div>
           </CardContent>
@@ -293,7 +291,7 @@ Ya descargué mi factura proforma.
                                     )}/>
                                     <div className="space-y-2">
                                         <FormLabel>Fecha de nacimiento *</FormLabel>
-                                        <div className="flex gap-2">
+                                        <div className="grid grid-cols-3 gap-2">
                                             <FormField control={form.control} name="birthDay" render={({ field }) => (
                                                 <FormControl><Input placeholder="Día" type="number" {...field} /></FormControl>
                                             )}/>
@@ -357,7 +355,7 @@ Ya descargué mi factura proforma.
                                   className="w-full bg-accent hover:bg-accent/90 text-lg py-7 shadow-lg"
                                   disabled={isSubmitting}
                                 >
-                                    {isSubmitting ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Registrando...</> : '1. Registrar Reserva'}
+                                    {isSubmitting ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Registrando...</> : 'Registrar Pedido'}
                                 </Button>
                             </form>
                         </Form>
