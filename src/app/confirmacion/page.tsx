@@ -1,4 +1,3 @@
-
 import { redirect } from 'next/navigation';
 import { isValid, parseISO } from 'date-fns';
 import type { Metadata } from 'next';
@@ -37,7 +36,7 @@ export default function ConfirmationPage({
   const startDate = parseISO(from);
   const endDate = parseISO(to);
 
-  if (!isValid(startDate) || !isValid(endDate) || endDate < startDate) {
+  if (!isValid(startDate) || !isValid(endDate)) {
     redirect('/');
   }
   

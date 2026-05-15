@@ -1,0 +1,33 @@
+{
+  "entities": {
+    "Order": {
+      "title": "Pedido de Renta",
+      "description": "Información detallada de una reserva de auto",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerEmail": { "type": "string" },
+        "customerPhone": { "type": "string" },
+        "carName": { "type": "string" },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" },
+        "pickupLocation": { "type": "string" },
+        "dropoffLocation": { "type": "string" },
+        "totalAmount": { "type": "number" },
+        "paymentOption": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["customerName", "customerEmail", "carName", "totalAmount"]
+    }
+  },
+  "auth": {
+    "providers": ["google.com"]
+  },
+  "firestore": {
+    "/pedidos/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Colección de pedidos realizados por los clientes"
+    }
+  }
+}

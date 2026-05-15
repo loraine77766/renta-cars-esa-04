@@ -1,4 +1,3 @@
-
 import type { Car } from './types';
 
 export const cars: Car[] = [
@@ -28,7 +27,7 @@ export const cars: Car[] = [
         'Si su hora de DEVOLUCIÓN al momento de reservar es más de 4 horas que su hora de RECOGIDA el sistema cargara 1 día adicional a su reserva automáticamente. Asegúrese de entregar el auto a la hora establecida.'
       ],
       notes: [
-        'A conductores entre 21-24 años y 75-80 años de edad se le incrementará el costo del seguro en un 50%.',
+        'A conductores entre 21-24 años y 74-80 años de edad se le incrementará el costo del seguro en un 50%.',
         'Renta Cars ESA solo confirma categorías, no marcas y/o modelos específicos.',
         'Mínimo de renta: 3 días.',
         'Costo de seguro por día: $45.00 USD.',
@@ -40,8 +39,8 @@ export const cars: Car[] = [
     id: 12,
     name: 'Bestune T90',
     description: 'Un SUV espacioso y lujoso, perfecto para viajes largos con la familia.',
-    pricePerDay: 110,
-    originalPricePerDay: 140,
+    pricePerDay: 140,
+    originalPricePerDay: 150,
     imageUrl: '/images/images/t90.jpg',
     imageHint: 'suv luxury white',
     features: ['4 Puertas', '5 Pasajeros', 'Automático', 'Gasolina', 'Clima', 'Maletero', 'Seguro incluido', 'Chapa ESA'],
@@ -245,7 +244,7 @@ export const cars: Car[] = [
       ]
     }
   },
-   {
+  {
     id: 14,
     name: 'Kia Rio',
     description: 'Un sedán compacto, económico y confiable, perfecto para recorrer la ciudad con estilo.',

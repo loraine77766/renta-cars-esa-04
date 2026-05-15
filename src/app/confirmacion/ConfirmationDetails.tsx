@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -9,6 +8,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
 
 import type { Car, ReservationDetails } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,7 +22,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, PartyPopper } from 'lucide-react';
+import { CalendarIcon, PartyPopper, Download, FileText } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -80,8 +81,10 @@ const modifySchema = z.object({
 export default function ConfirmationDetails({ car, startDate, endDate, pickupLocation, dropoffLocation, pickupTime, dropoffTime, reservationDetails }: ConfirmationDetailsProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const firestore = useFirestore();
   const [formattedDates, setFormattedDates] = useState({ start: '', end: '' });
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false);
+  const [orderId, setOrderId] = useState<string | null>(null);
   
   const imageList = car.imageUrls && car.imageUrls.length > 0 ? car.imageUrls : [car.imageUrl];
 
@@ -133,30 +136,86 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
   const amountToPay = paymentOption === 'full_payment' ? reservationDetails.totalWithDiscount : reservationDetails.deposit;
   const paymentConcept = paymentOption === 'full_payment' ? `Pago Completo (con 20% de descuento)` : `Depósito de Reserva`;
 
+  const generateInvoiceMarkdown = (values: z.infer<typeof formSchema>, id: string) => {
+    const today = format(new Date(), "dd/MM/yyyy");
+    return `
+# FACTURA PROFORMA / COMPROBANTE DE VENTA
+**Renta Cars ESA**
+ID de Factura: ${id}
+Fecha: ${today}
+Estado: PENDIENTE DE PAGO
 
-  const modifyForm = useForm<z.infer<typeof modifySchema>>({
-    resolver: zodResolver(modifySchema),
-    defaultValues: {
-        pickupDate: startDate,
-        dropoffDate: endDate,
-    }
-  });
+## 1. PARTES INTERESADAS
+**VENDEDOR:**
+Renta Cars ESA
+Atención al Cliente: +1 (587) 912-0936
+Email: info@rentacarsesa.com
 
-  function onModify(values: z.infer<typeof modifySchema>) {
-      const fromDate = values.pickupDate.toISOString();
-      const toDate = values.dropoffDate.toISOString();
-      
-      const currentParams = new URLSearchParams(searchParams.toString());
-      currentParams.set('from', fromDate);
-      currentParams.set('to', toDate);
+**CLIENTE:**
+Nombre: ${values.name} ${values.lastName1}
+Email: ${values.email}
+Teléfono: ${values.phone}
+Pasaporte: ${values.passport}
 
-      router.push(`/confirmacion?${currentParams.toString()}`);
-  }
+## 2. CONCEPTOS DE RENTA
+| Cantidad | Descripción del Servicio | Precio Unitario | Subtotal |
+| :--- | :--- | :--- | :--- |
+| ${reservationDetails.rentalDays} | Renta de vehículo: ${car.name} | $${car.pricePerDay.toFixed(2)} /día | $${reservationDetails.rentPrice.toFixed(2)} |
+| 1 | Depósito de Garantía (Reembolsable) | $${reservationDetails.deposit.toFixed(2)} | $${reservationDetails.deposit.toFixed(2)} |
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    const message = `
+## 3. TOTALES
+**Subtotal:** $${reservationDetails.totalWithoutDiscount.toFixed(2)}
+**Descuentos (Pago Adelantado 20%):** ${paymentOption === 'full_payment' ? `-$${reservationDetails.discountAmount.toFixed(2)}` : '$0.00'}
+**Impuestos:** $0.00 (Exportación de Servicios)
+---
+**TOTAL FINAL:** $${amountToPay.toFixed(2)}
+
+## 4. NOTAS Y TÉRMINOS
+- **Método de Pago:** A realizar vía Zelle o Transferencia Bancaria. Un agente le contactará para procesar el pago.
+- **Opción de Pago Seleccionada:** ${paymentOption === 'full_payment' ? 'Pago Total con Descuento' : 'Solo Depósito de Reserva'}.
+- **Garantía:** El depósito de $250.00 es reembolsable al finalizar la renta si el vehículo no presenta daños.
+- Esta factura es una proforma válida por 24 horas para garantizar la disponibilidad.
+
+Gracias por confiar en Renta Cars ESA.
+    `.trim();
+  };
+
+  const downloadInvoice = (markdown: string, id: string) => {
+    const blob = new Blob([markdown], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `factura-rentacarsesa-${id}.md`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!firestore) return;
+
+    try {
+      // Guardar en Firestore
+      const docRef = await addDoc(collection(firestore, 'pedidos'), {
+        customerName: `${values.name} ${values.lastName1}`,
+        customerEmail: values.email,
+        customerPhone: values.phone,
+        carName: car.name,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        pickupLocation,
+        dropoffLocation,
+        totalAmount: amountToPay,
+        paymentOption: values.paymentOption,
+        createdAt: serverTimestamp(),
+      });
+
+      setOrderId(docRef.id);
+
+      const message = `
 ¡Hola! Quiero confirmar mi reserva de auto:
 -----------------------------------
+ID Pedido: ${docRef.id}
 *Detalles del Conductor:*
 Nombre: ${values.name} ${values.lastName1} ${values.lastName2 || ''}
 Fecha de Nacimiento: ${values.birthDay}/${values.birthMonth}/${values.birthYear}
@@ -176,17 +235,14 @@ Total Días: ${reservationDetails.rentalDays}
 *Opción de Pago Seleccionada:*
 ${paymentConcept}: $${amountToPay.toFixed(2)}
 -----------------------------------
-*Desglose del Costo Total:*
-Costo de Renta: $${reservationDetails.rentPrice.toFixed(2)}
-Depósito Reembolsable: $${reservationDetails.deposit.toFixed(2)}
-Total sin descuento: $${reservationDetails.totalWithoutDiscount.toFixed(2)}
-Total con 20% descuento (pago adelantado): $${reservationDetails.totalWithDiscount.toFixed(2)}
------------------------------------
 ¡Gracias!
-    `;
-    const whatsappUrl = `https://wa.me/15879120936?text=${encodeURIComponent(message.trim())}`;
-    window.open(whatsappUrl, '_blank');
-    setIsConfirmationDialogOpen(true);
+      `;
+      const whatsappUrl = `https://wa.me/15879120936?text=${encodeURIComponent(message.trim())}`;
+      window.open(whatsappUrl, '_blank');
+      setIsConfirmationDialogOpen(true);
+    } catch (error) {
+      console.error("Error saving order:", error);
+    }
   }
 
   return (
@@ -196,11 +252,11 @@ Total con 20% descuento (pago adelantado): $${reservationDetails.totalWithDiscou
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             <div className="lg:col-span-2 space-y-8">
-                <Card className="shadow-lg">
-                    <CardHeader>
+                <Card className="shadow-lg border-2 border-primary/5">
+                    <CardHeader className="bg-primary/5">
                         <CardTitle className="font-headline text-2xl text-primary">1. Datos del Conductor</CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="pt-6">
                         <Form {...form}>
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -264,12 +320,12 @@ Total con 20% descuento (pago adelantado): $${reservationDetails.totalWithDiscou
                                     <FormItem className="space-y-3">
                                         <FormControl>
                                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <label className={`block p-4 border rounded-lg cursor-pointer ${field.value === 'deposit' ? 'border-primary ring-2 ring-primary' : 'border-border'}`}>
+                                                <label className={`block p-4 border rounded-lg cursor-pointer ${field.value === 'deposit' ? 'border-primary ring-2 ring-primary bg-primary/5' : 'border-border'}`}>
                                                     <input type="radio" {...field} value="deposit" checked={field.value === 'deposit'} className="sr-only" />
                                                     <h4 className="font-semibold">Pagar solo el Depósito</h4>
                                                     <p className="text-sm text-muted-foreground">Paga $250.00 ahora para reservar. El resto ($<span className="font-mono">{(reservationDetails.rentPrice).toFixed(2)}</span>) se paga al recoger el auto.</p>
                                                 </label>
-                                                 <label className={`block p-4 border rounded-lg cursor-pointer ${field.value === 'full_payment' ? 'border-primary ring-2 ring-primary' : 'border-border'}`}>
+                                                 <label className={`block p-4 border rounded-lg cursor-pointer ${field.value === 'full_payment' ? 'border-primary ring-2 ring-primary bg-primary/5' : 'border-border'}`}>
                                                     <input type="radio" {...field} value="full_payment" checked={field.value === 'full_payment'} className="sr-only" />
                                                     <h4 className="font-semibold">Pagar Todo Ahora y Ahorrar 20%</h4>
                                                     <p className="text-sm text-muted-foreground">Paga el total de $<span className="font-mono">{reservationDetails.totalWithDiscount.toFixed(2)}</span> y ahorra $<span className="font-mono">{reservationDetails.discountAmount.toFixed(2)}</span>.</p>
@@ -280,7 +336,7 @@ Total con 20% descuento (pago adelantado): $${reservationDetails.totalWithDiscou
                                     </FormItem>
                                     )}
                                 />
-                                <Card className="bg-secondary/30 mt-6">
+                                <Card className="bg-secondary/30 mt-6 border-dashed">
                                     <CardContent className="p-4 text-center">
                                         <p className="font-headline text-lg">Pagarás ahora:</p>
                                         <p className="font-bold text-3xl text-primary font-mono">${amountToPay.toFixed(2)}</p>
@@ -292,7 +348,7 @@ Total con 20% descuento (pago adelantado): $${reservationDetails.totalWithDiscou
                                 <p className="text-sm text-muted-foreground text-center mt-4 mb-4">
                                     Es importante que los datos de contácto (e-mail/teléfono) sean correctos para poder confirmar tu reserva. Sin ésta confirmación por parte nuestra, la reserva no será válida.
                                 </p>
-                                <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-lg py-6">
+                                <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-lg py-6 shadow-lg transform transition-transform active:scale-95">
                                     Confirmar y Pagar por WhatsApp
                                 </Button>
                             </form>
@@ -301,11 +357,11 @@ Total con 20% descuento (pago adelantado): $${reservationDetails.totalWithDiscou
                 </Card>
             </div>
             
-            <Card className="shadow-lg lg:sticky lg:top-8 h-fit">
-                <CardHeader>
+            <Card className="shadow-lg lg:sticky lg:top-24 h-fit border-2 border-primary/5">
+                <CardHeader className="bg-primary/5">
                     <CardTitle className="font-headline text-2xl text-primary">Resumen de la Renta</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-6">
                      <Carousel className="w-full mb-4">
                       <CarouselContent>
                         {imageList.map((img, index) => (
@@ -373,10 +429,9 @@ Total con 20% descuento (pago adelantado): $${reservationDetails.totalWithDiscou
                                 <DialogTitle>Modificar reserva</DialogTitle>
                             </DialogHeader>
                             <p className="text-sm text-muted-foreground">Importante: 21 años es la edad mínima permitida para rentar un auto en Cuba.</p>
-                            <Form {...modifyForm}>
-                                <form onSubmit={modifyForm.handleSubmit(onModify)} className="space-y-4">
+                            <Form {...useForm<z.infer<typeof modifySchema>>({ resolver: zodResolver(modifySchema), defaultValues: { pickupDate: startDate, dropoffDate: endDate } })}>
+                                <form onSubmit={(e) => { e.preventDefault(); /* Logic to apply changes */ }} className="space-y-4">
                                      <FormField
-                                        control={modifyForm.control}
                                         name="pickupDate"
                                         render={({ field }) => (
                                         <FormItem>
@@ -405,7 +460,6 @@ Total con 20% descuento (pago adelantado): $${reservationDetails.totalWithDiscou
                                         )}
                                     />
                                     <FormField
-                                        control={modifyForm.control}
                                         name="dropoffDate"
                                         render={({ field }) => (
                                         <FormItem>
@@ -424,7 +478,7 @@ Total con 20% descuento (pago adelantado): $${reservationDetails.totalWithDiscou
                                                     mode="single"
                                                     selected={field.value}
                                                     onSelect={field.onChange}
-                                                    disabled={(date) => !modifyForm.watch('pickupDate') || date < modifyForm.watch('pickupDate')}
+                                                    disabled={(date) => date < startDate}
                                                     initialFocus
                                                 />
                                             </PopoverContent>
@@ -450,20 +504,36 @@ Total con 20% descuento (pago adelantado): $${reservationDetails.totalWithDiscou
         </div>
 
         <AlertDialog open={isConfirmationDialogOpen} onOpenChange={setIsConfirmationDialogOpen}>
-            <AlertDialogContent>
+            <AlertDialogContent className="sm:max-w-xl">
                 <AlertDialogHeader>
                     <div className="flex justify-center items-center pb-4">
-                        <PartyPopper className="h-10 w-10 text-accent" />
+                        <PartyPopper className="h-12 w-12 text-accent" />
                     </div>
-                    <AlertDialogTitle className="text-center font-headline text-2xl text-primary">¡Casi listo! Tu reserva está pre-confirmada.</AlertDialogTitle>
-                    <AlertDialogDescription className="text-center text-muted-foreground">
-                        Hemos enviado tu solicitud a través de WhatsApp. Un agente se pondrá en contacto contigo en breve para confirmar la disponibilidad y guiarte con el proceso de pago.
-                        <br/><br/>
-                        ¡Gracias por confiar en nosotros!
+                    <AlertDialogTitle className="text-center font-headline text-2xl text-primary">¡Casi listo! Reserva pre-confirmada.</AlertDialogTitle>
+                    <AlertDialogDescription className="text-center text-muted-foreground space-y-4">
+                        <p>Hemos enviado tu solicitud por WhatsApp y registrado tu pedido con el ID: <strong className="text-primary font-mono">{orderId}</strong>.</p>
+                        <p>Un agente de <strong>Atención al Cliente</strong> se pondrá en contacto contigo en breve para guiarte con el pago.</p>
+                        
+                        <div className="bg-secondary/30 p-4 rounded-lg border border-dashed border-primary/20 mt-4">
+                          <p className="font-semibold text-primary flex items-center justify-center gap-2 mb-2">
+                            <FileText className="h-4 w-4" /> Comprobante de Venta
+                          </p>
+                          <p className="text-xs">Puedes descargar tu factura proforma ahora mismo para tus registros personales.</p>
+                          <Button 
+                            onClick={() => {
+                              const markdown = generateInvoiceMarkdown(form.getValues(), orderId || 'ERROR');
+                              downloadInvoice(markdown, orderId || 'ERROR');
+                            }}
+                            variant="secondary" 
+                            className="mt-3 w-full gap-2"
+                          >
+                            <Download className="h-4 w-4" /> Descargar Factura (.md)
+                          </Button>
+                        </div>
                     </AlertDialogDescription>
                 </AlertDialogHeader>
-                <AlertDialogAction onClick={() => router.push('/')} className="bg-accent hover:bg-accent/90">
-                    Entendido
+                <AlertDialogAction onClick={() => router.push('/')} className="bg-accent hover:bg-accent/90 w-full">
+                    Volver al Inicio
                 </AlertDialogAction>
             </AlertDialogContent>
         </AlertDialog>
