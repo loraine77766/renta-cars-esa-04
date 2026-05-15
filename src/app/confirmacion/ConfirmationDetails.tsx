@@ -9,7 +9,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
-import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useFirestore } from '@/firebase/index';
 
 import type { Car, ReservationDetails } from '@/lib/types';
@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
-import { Download, Loader2, MessageCircle, CheckCircle2, FileText } from 'lucide-react';
+import { Loader2, MessageCircle, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ConfirmationDetailsProps {
@@ -67,8 +67,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
   const { toast } = useToast();
   const [formattedDates, setFormattedDates] = useState({ start: '', end: '' });
   const [orderId, setOrderId] = useState<string | null>(null);
-  const [isSubmittingInvoice, setIsSubmittingInvoice] = useState(false);
-  const [isSubmittingWhatsApp, setIsSubmittingWhatsApp] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   
   useEffect(() => {
@@ -113,127 +112,77 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
     return result;
   };
 
-  const generateInvoiceMarkdown = (values: z.infer<typeof formSchema>, id: string) => {
-    const today = format(new Date(), "dd/MM/yyyy");
-    return `
-# FACTURA PROFORMA / COMPROBANTE DE VENTA
-**Renta Cars ESA**
-ID de Factura: ${id}
-Fecha: ${today}
-Estado: PENDIENTE DE PAGO
-
-## 1. DATOS DEL CLIENTE
-Nombre: ${values.name} ${values.lastName1} ${values.lastName2 || ''}
-Email: ${values.email}
-Teléfono: ${values.phone}
-Pasaporte: ${values.passport}
-País: ${values.country}
-
-## 2. DETALLES DE LA RENTA
-Vehículo: ${car.name}
-Días: ${reservationDetails.rentalDays}
-Recogida: ${formattedDates.start} (${pickupLocation})
-Devolución: ${formattedDates.end} (${dropoffLocation})
-
-## 3. TOTALES
-Subtotal Renta: $${reservationDetails.rentPrice.toFixed(2)}
-Depósito Garantía: $250.00
----
-**TOTAL A PAGAR AHORA:** $${amountToPay.toFixed(2)}
-(Opción: ${paymentOption === 'full_payment' ? 'Pago Total con 20% Descuento' : 'Solo Depósito'})
-
-## 4. NOTAS
-- Pagar vía WhatsApp (+1 587 912-0936).
-- El depósito de $250 es reembolsable.
-    `.trim();
-  };
-
-  const handleAction = async (type: 'invoice' | 'whatsapp') => {
+  const handleRegisterAndWhatsApp = async () => {
     const isValid = await form.trigger();
     if (!isValid) return;
 
-    if (!firestore) return;
+    if (!firestore) {
+      toast({ variant: "destructive", title: "Error: No hay conexión con la base de datos." });
+      return;
+    }
     
-    if (type === 'invoice') setIsSubmittingInvoice(true);
-    else setIsSubmittingWhatsApp(true);
+    setIsSubmitting(true);
 
     try {
-      let currentId = orderId;
       const values = form.getValues();
+      const currentId = orderId || generateOrderId();
 
-      if (!isRegistered) {
-        currentId = generateOrderId();
-        // Verificar si el ID ya existe
-        const docSnap = await getDoc(doc(firestore, 'pedidos', currentId));
-        if (docSnap.exists()) {
-          currentId = generateOrderId();
-        }
+      // Guardar en Firestore
+      await setDoc(doc(firestore, 'pedidos', currentId), {
+        id: currentId,
+        customerName: `${values.name} ${values.lastName1} ${values.lastName2 || ''}`,
+        customerEmail: values.email,
+        customerPhone: values.phone,
+        customerPassport: values.passport,
+        customerLicense: values.driversLicense,
+        customerCountry: values.country,
+        carName: car.name,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        pickupLocation,
+        dropoffLocation,
+        totalAmount: amountToPay,
+        paymentOption: values.paymentOption,
+        createdAt: serverTimestamp(),
+      });
 
-        await setDoc(doc(firestore, 'pedidos', currentId), {
-          id: currentId,
-          customerName: `${values.name} ${values.lastName1}`,
-          customerEmail: values.email,
-          customerPhone: values.phone,
-          customerPassport: values.passport,
-          customerLicense: values.driversLicense,
-          customerCountry: values.country,
-          carName: car.name,
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
-          pickupLocation,
-          dropoffLocation,
-          totalAmount: amountToPay,
-          paymentOption: values.paymentOption,
-          createdAt: serverTimestamp(),
-        });
-        setOrderId(currentId);
-        setIsRegistered(true);
-      }
+      setOrderId(currentId);
+      setIsRegistered(true);
 
-      if (type === 'invoice' && currentId) {
-        const markdown = generateInvoiceMarkdown(values, currentId);
-        const blob = new Blob([markdown], { type: 'text/markdown' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `factura-${currentId}.md`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast({ title: "Factura descargada correctamente" });
-      } else if (type === 'whatsapp' && currentId) {
-        const message = `
+      // Abrir WhatsApp
+      const message = `
 ¡Hola! Quiero confirmar mi reserva:
 -----------------------------------
 ID PEDIDO: ${currentId}
 -----------------------------------
 Vehículo: ${car.name}
 Conductor: ${values.name} ${values.lastName1}
-WhatsApp: ${values.phone}
 Pasaporte: ${values.passport}
+WhatsApp: ${values.phone}
 -----------------------------------
 Recogida: ${formattedDates.start}
 Devolución: ${formattedDates.end}
 -----------------------------------
 PAGO: $${amountToPay.toFixed(2)} (${paymentConcept})
 -----------------------------------
-Ya tengo mi factura proforma.
-        `.trim();
-        window.open(`https://wa.me/15879120936?text=${encodeURIComponent(message)}`, '_blank');
-      }
+Favor enviarme link de pago.
+      `.trim();
+      
+      window.open(`https://wa.me/15879120936?text=${encodeURIComponent(message)}`, '_blank');
+      
+      toast({ title: "Pedido registrado y WhatsApp abierto" });
     } catch (error) {
       console.error("Error:", error);
-      toast({ variant: "destructive", title: "Error al procesar la solicitud" });
+      toast({ variant: "destructive", title: "Error al registrar el pedido. Inténtalo de nuevo." });
     } finally {
-      setIsSubmittingInvoice(false);
-      setIsSubmittingWhatsApp(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
     <div className="max-w-6xl mx-auto px-4">
-        <h1 className="font-headline text-3xl md:text-4xl font-bold text-primary mb-2 text-center">Reserva tu Auto</h1>
-        <p className="text-center text-muted-foreground mb-8">Completa tus datos para registrar el pedido y obtener tu factura.</p>
+        <h1 className="font-headline text-3xl md:text-4xl font-bold text-primary mb-2 text-center">Finaliza tu Reserva</h1>
+        <p className="text-center text-muted-foreground mb-8">Completa tus datos para registrar el pedido y contactarnos por WhatsApp.</p>
 
         {isRegistered && (
           <Card className="mb-8 border-2 border-green-500 bg-green-50 dark:bg-green-900/10">
@@ -245,7 +194,10 @@ Ya tengo mi factura proforma.
                   <p className="text-xs text-green-600 dark:text-green-400">ID de seguimiento: <span className="font-mono font-bold">{orderId}</span></p>
                 </div>
               </div>
-              <Button variant="outline" size="sm" onClick={() => router.push('/')}>Nueva Reserva</Button>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => router.push('/')}>Nueva Reserva</Button>
+                <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={handleRegisterAndWhatsApp}>Abrir WhatsApp otra vez</Button>
+              </div>
             </CardContent>
           </Card>
         )}
@@ -330,32 +282,25 @@ Ya tengo mi factura proforma.
                                     <p className="font-bold text-4xl text-primary font-mono">${amountToPay.toFixed(2)}</p>
                                 </div>
 
-                                <div className="space-y-6 pt-4">
-                                  <div className="bg-primary/5 p-6 rounded-xl border-2 border-primary/10 shadow-sm space-y-4">
-                                    <p className="text-xs font-bold text-primary uppercase tracking-widest text-center">Paso A: Documentación</p>
-                                    <Button 
-                                      type="button"
-                                      onClick={() => handleAction('invoice')} 
-                                      className="w-full h-auto py-5 text-lg gap-3 bg-primary hover:bg-primary/90 shadow-lg whitespace-normal"
-                                      disabled={isSubmittingInvoice || isSubmittingWhatsApp}
-                                    >
-                                      {isSubmittingInvoice ? <Loader2 className="h-6 w-6 animate-spin" /> : <><FileText className="h-6 w-6 shrink-0" /> <span className="text-center">Descargar Factura Proforma</span></>}
-                                    </Button>
-                                    <p className="text-[10px] text-center text-muted-foreground">Descarga este documento para presentarlo en la oficina de renta.</p>
-                                  </div>
-
-                                  <div className="bg-green-50 p-6 rounded-xl border-2 border-green-200 shadow-sm space-y-4">
-                                    <p className="text-xs font-bold text-green-600 uppercase tracking-widest text-center">Paso B: Pago Final</p>
-                                    <Button 
-                                      type="button"
-                                      onClick={() => handleAction('whatsapp')}
-                                      className="w-full h-auto py-5 text-lg gap-3 bg-green-600 hover:bg-green-700 shadow-lg text-white whitespace-normal"
-                                      disabled={isSubmittingInvoice || isSubmittingWhatsApp}
-                                    >
-                                      {isSubmittingWhatsApp ? <Loader2 className="h-6 w-6 animate-spin" /> : <><MessageCircle className="h-6 w-6 shrink-0" /> <span className="text-center">Pagar por WhatsApp</span></>}
-                                    </Button>
-                                    <p className="text-[10px] text-center text-muted-foreground">Envía el ID de tu pedido para recibir el link de pago seguro.</p>
-                                  </div>
+                                <div className="pt-4">
+                                  <Button 
+                                    type="button"
+                                    onClick={handleRegisterAndWhatsApp}
+                                    className="w-full h-auto py-5 text-lg gap-3 bg-green-600 hover:bg-green-700 shadow-lg text-white"
+                                    disabled={isSubmitting}
+                                  >
+                                    {isSubmitting ? (
+                                      <Loader2 className="h-6 w-6 animate-spin" />
+                                    ) : (
+                                      <>
+                                        <MessageCircle className="h-6 w-6 shrink-0" /> 
+                                        <span>Confirmar Reserva y Pagar por WhatsApp</span>
+                                      </>
+                                    )}
+                                  </Button>
+                                  <p className="text-[10px] text-center text-muted-foreground mt-4">
+                                    Al hacer clic, se registrará tu pedido y se abrirá WhatsApp con el ID de reserva.
+                                  </p>
                                 </div>
                             </form>
                         </Form>
@@ -375,7 +320,7 @@ Ya tengo mi factura proforma.
                         <TableBody>
                             <TableRow><TableCell className="font-semibold p-2">Auto:</TableCell><TableCell className="p-2">{car.name}</TableCell></TableRow>
                             <TableRow><TableCell className="font-semibold p-2">Días:</TableCell><TableCell className="p-2">{reservationDetails.rentalDays}</TableCell></TableRow>
-                            <TableRow><TableCell className="font-semibold p-2">Lugar:</TableCell><TableCell className="p-2 text-xs">{pickupLocation.split(',')[0]}</TableCell></TableRow>
+                            <TableRow><TableCell className="font-semibold p-2">Recogida:</TableCell><TableCell className="p-2 text-xs">{pickupLocation.split(',')[0]}</TableCell></TableRow>
                         </TableBody>
                     </Table>
                     <Separator />
