@@ -18,8 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
-import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { PartyPopper, Download, Loader2, MessageCircle } from 'lucide-react';
+import { PartyPopper, Download, Loader2, MessageCircle, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ConfirmationDetailsProps {
@@ -63,9 +62,9 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
   const firestore = useFirestore();
   const { toast } = useToast();
   const [formattedDates, setFormattedDates] = useState({ start: '', end: '' });
-  const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(false);
   
   useEffect(() => {
     try {
@@ -98,7 +97,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
   const paymentConcept = paymentOption === 'full_payment' ? `Pago Completo (20% Desc.)` : `Depósito de Reserva`;
 
   const generateOrderId = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Evitamos O, I, 0, 1 para evitar confusiones
     let result = '';
     for (let i = 0; i < 8; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -141,12 +140,15 @@ Depósito Garantía: $250.00
     `.trim();
   };
 
-  const downloadInvoice = (markdown: string, id: string) => {
+  const downloadInvoice = () => {
+    if (!orderId) return;
+    const values = form.getValues();
+    const markdown = generateInvoiceMarkdown(values, orderId);
     const blob = new Blob([markdown], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `factura-${id}.md`;
+    link.download = `factura-${orderId}.md`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -199,7 +201,8 @@ Ya descargué mi factura proforma.
       });
 
       setOrderId(newId);
-      setIsConfirmationDialogOpen(true);
+      setIsRegistered(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error: any) {
       console.error("Error saving order:", error);
       toast({ variant: "destructive", title: "Error al registrar pedido" });
@@ -208,16 +211,72 @@ Ya descargué mi factura proforma.
     }
   }
 
+  if (isRegistered) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in zoom-in duration-500">
+        <Card className="shadow-2xl border-2 border-primary/20 overflow-hidden">
+          <CardHeader className="bg-primary/5 text-center py-10">
+            <div className="flex justify-center mb-4">
+              <CheckCircle2 className="h-20 w-20 text-green-500" />
+            </div>
+            <CardTitle className="font-headline text-3xl text-primary">¡Pedido Registrado con Éxito!</CardTitle>
+            <p className="text-muted-foreground mt-2">Tu ID de pedido es: <strong className="text-primary font-mono text-xl">{orderId}</strong></p>
+          </CardHeader>
+          <CardContent className="p-8 space-y-10">
+            
+            {/* BLOQUE 1: FACTURA (ARRIBA) */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="bg-primary text-white rounded-full h-6 w-6 flex items-center justify-center font-bold text-xs">1</div>
+                <h3 className="font-bold text-primary uppercase text-sm">Descarga tu comprobante</h3>
+              </div>
+              <Button 
+                onClick={downloadInvoice} 
+                className="w-full h-16 text-lg gap-3 bg-primary hover:bg-primary/90 shadow-lg"
+              >
+                <Download className="h-6 w-6" /> Descargar Factura Proforma
+              </Button>
+              <p className="text-xs text-center text-muted-foreground">Guarda este documento para tus registros.</p>
+            </div>
+
+            <Separator />
+
+            {/* BLOQUE 2: WHATSAPP (ABAJO) */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="bg-accent text-white rounded-full h-6 w-6 flex items-center justify-center font-bold text-xs">2</div>
+                <h3 className="font-bold text-accent uppercase text-sm">Coordina el pago</h3>
+              </div>
+              <Button 
+                onClick={handleWhatsAppPayment}
+                className="w-full h-16 text-lg gap-3 bg-green-600 hover:bg-green-700 shadow-lg"
+              >
+                <MessageCircle className="h-6 w-6" /> Pagar por WhatsApp
+              </Button>
+              <p className="text-xs text-center text-muted-foreground">Serás atendido por nuestro equipo de Atención al Cliente.</p>
+            </div>
+            
+            <div className="pt-6">
+              <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => router.push('/')}>
+                Volver al inicio
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-6xl mx-auto">
         <h1 className="font-headline text-3xl md:text-4xl font-bold text-primary mb-4 text-center">Finaliza tu Reserva</h1>
-        <p className="text-center text-muted-foreground mb-8">Completa tus datos para generar la factura proforma y coordinar el pago.</p>
+        <p className="text-center text-muted-foreground mb-8">Completa tus datos para registrar el pedido en nuestro sistema 2026.</p>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             <div className="lg:col-span-2 space-y-8">
                 <Card className="shadow-lg border-2 border-primary/5">
                     <CardHeader className="bg-primary/5">
-                        <CardTitle className="font-headline text-2xl text-primary">1. Datos del Conductor Principal</CardTitle>
+                        <CardTitle className="font-headline text-2xl text-primary">Datos del Conductor</CardTitle>
                     </CardHeader>
                     <CardContent className="pt-6">
                         <Form {...form}>
@@ -264,7 +323,7 @@ Ya descargué mi factura proforma.
                                 </div>
                                 
                                 <Separator />
-                                <h3 className="font-headline text-xl text-primary">2. Forma de Pago</h3>
+                                <h3 className="font-headline text-xl text-primary">Forma de Pago</h3>
                                 <FormField
                                     control={form.control}
                                     name="paymentOption"
@@ -275,12 +334,12 @@ Ya descargué mi factura proforma.
                                                 <label className={`block p-4 border rounded-lg cursor-pointer transition-all ${field.value === 'deposit' ? 'border-primary ring-2 ring-primary bg-primary/5' : 'border-border'}`}>
                                                     <input type="radio" {...field} value="deposit" checked={field.value === 'deposit'} className="sr-only" />
                                                     <h4 className="font-semibold">Solo Depósito ($250)</h4>
-                                                    <p className="text-xs text-muted-foreground">Paga $250 ahora para asegurar. El resto al recoger.</p>
+                                                    <p className="text-xs text-muted-foreground">Asegura tu auto ahora.</p>
                                                 </label>
                                                 <label className={`block p-4 border rounded-lg cursor-pointer transition-all ${field.value === 'full_payment' ? 'border-primary ring-2 ring-primary bg-primary/5' : 'border-border'}`}>
                                                     <input type="radio" {...field} value="full_payment" checked={field.value === 'full_payment'} className="sr-only" />
                                                     <h4 className="font-semibold">Pago Total (-20% Dto.)</h4>
-                                                    <p className="text-xs text-muted-foreground">Ahorra en el total pagando hoy mismo por adelantado.</p>
+                                                    <p className="text-xs text-muted-foreground">Ahorra pagando hoy mismo.</p>
                                                 </label>
                                             </div>
                                         </FormControl>
@@ -298,7 +357,7 @@ Ya descargué mi factura proforma.
                                   className="w-full bg-accent hover:bg-accent/90 text-lg py-7 shadow-lg"
                                   disabled={isSubmitting}
                                 >
-                                    {isSubmitting ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Registrando Pedido...</> : 'Registrar y Generar Factura'}
+                                    {isSubmitting ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Registrando...</> : '1. Registrar Reserva'}
                                 </Button>
                             </form>
                         </Form>
@@ -308,7 +367,7 @@ Ya descargué mi factura proforma.
             
             <Card className="shadow-lg lg:sticky lg:top-24 border-2 border-primary/5">
                 <CardHeader className="bg-primary/5">
-                    <CardTitle className="font-headline text-xl text-primary">Resumen de Renta</CardTitle>
+                    <CardTitle className="font-headline text-xl text-primary">Resumen</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6 space-y-4">
                     <div className="relative h-40 w-full">
@@ -329,44 +388,6 @@ Ya descargué mi factura proforma.
                 </CardContent>
             </Card>
         </div>
-
-        <AlertDialog open={isConfirmationDialogOpen} onOpenChange={setIsConfirmationDialogOpen}>
-            <AlertDialogContent className="sm:max-w-md">
-                <AlertDialogHeader>
-                    <div className="flex justify-center mb-4"><PartyPopper className="h-14 w-14 text-accent" /></div>
-                    <AlertDialogTitle className="text-center font-headline text-2xl text-primary">¡Pedido Registrado!</AlertDialogTitle>
-                    <AlertDialogDescription className="text-center space-y-6">
-                        <p>Tu solicitud ha sido guardada con el ID: <strong className="text-primary font-mono">{orderId}</strong>.</p>
-                        
-                        <div className="space-y-3">
-                            <div className="bg-primary/5 p-4 rounded-lg border border-primary/20">
-                                <p className="text-xs font-bold text-primary uppercase mb-2 text-left">Paso 1: Tu Comprobante</p>
-                                <Button 
-                                    onClick={() => downloadInvoice(generateInvoiceMarkdown(form.getValues(), orderId || 'ERROR'), orderId || 'ERROR')} 
-                                    variant="outline" 
-                                    className="w-full gap-2 border-primary text-primary hover:bg-primary/10"
-                                >
-                                    <Download className="h-4 w-4" /> Descargar Factura Proforma
-                                </Button>
-                            </div>
-
-                            <div className="bg-accent/5 p-4 rounded-lg border border-accent/20">
-                                <p className="text-xs font-bold text-accent uppercase mb-2 text-left">Paso 2: Coordinar Pago</p>
-                                <Button 
-                                    onClick={handleWhatsAppPayment}
-                                    className="w-full gap-2 bg-green-600 hover:bg-green-700"
-                                >
-                                    <MessageCircle className="h-4 w-4" /> Pagar por WhatsApp
-                                </Button>
-                            </div>
-                        </div>
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <div className="mt-4">
-                    <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => router.push('/')}>Cerrar y volver al inicio</Button>
-                </div>
-            </AlertDialogContent>
-        </AlertDialog>
     </div>
   );
 }
