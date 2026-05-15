@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useFirestore } from '@/firebase/index';
 
 import type { Car, ReservationDetails } from '@/lib/types';
@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { PartyPopper, Download, FileText, Loader2, MessageCircle } from 'lucide-react';
+import { PartyPopper, Download, Loader2, MessageCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ConfirmationDetailsProps {
@@ -103,6 +103,15 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
   const amountToPay = paymentOption === 'full_payment' ? reservationDetails.totalWithDiscount : reservationDetails.deposit;
   const paymentConcept = paymentOption === 'full_payment' ? `Pago Completo (20% Desc.)` : `Depósito de Reserva`;
 
+  const generateOrderId = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 8; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
   const generateInvoiceMarkdown = (values: z.infer<typeof formSchema>, id: string) => {
     const today = format(new Date(), "dd/MM/yyyy");
     return `
@@ -176,7 +185,9 @@ Ya descargué mi factura proforma.
     if (!firestore) return;
     setIsSubmitting(true);
     try {
-      const docRef = await addDoc(collection(firestore, 'pedidos'), {
+      const newId = generateOrderId();
+      await setDoc(doc(firestore, 'pedidos', newId), {
+        id: newId,
         customerName: `${values.name} ${values.lastName1}`,
         customerLastName2: values.lastName2 || '',
         customerEmail: values.email,
@@ -195,7 +206,7 @@ Ya descargué mi factura proforma.
         createdAt: serverTimestamp(),
       });
 
-      setOrderId(docRef.id);
+      setOrderId(newId);
       setIsConfirmationDialogOpen(true);
     } catch (error: any) {
       console.error("Error saving order:", error);
