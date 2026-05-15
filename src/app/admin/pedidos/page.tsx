@@ -3,13 +3,13 @@
 import { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { useFirestore, useCollection } from '@/firebase';
+import { useFirestore, useCollection } from '@/firebase/index';
 import { collection, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Trash2, Phone, Mail, Calendar, Loader2, ClipboardList, Lock } from 'lucide-react';
+import { Trash2, Phone, Mail, Loader2, ClipboardList, Lock } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';

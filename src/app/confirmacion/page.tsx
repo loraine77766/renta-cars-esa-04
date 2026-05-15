@@ -14,16 +14,22 @@ export default function ConfirmationPage({
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
-  const { carId, from, to, pickupLocation, dropoffLocation, pickupTime, dropoffTime } = searchParams;
+  const carId = Array.isArray(searchParams.carId) ? searchParams.carId[0] : searchParams.carId;
+  const from = Array.isArray(searchParams.from) ? searchParams.from[0] : searchParams.from;
+  const to = Array.isArray(searchParams.to) ? searchParams.to[0] : searchParams.to;
+  const pickupLocation = Array.isArray(searchParams.pickupLocation) ? searchParams.pickupLocation[0] : searchParams.pickupLocation;
+  const dropoffLocation = Array.isArray(searchParams.dropoffLocation) ? searchParams.dropoffLocation[0] : searchParams.dropoffLocation;
+  const pickupTime = Array.isArray(searchParams.pickupTime) ? searchParams.pickupTime[0] : searchParams.pickupTime;
+  const dropoffTime = Array.isArray(searchParams.dropoffTime) ? searchParams.dropoffTime[0] : searchParams.dropoffTime;
 
   if (
-    !carId || typeof carId !== 'string' ||
-    !from || typeof from !== 'string' ||
-    !to || typeof to !== 'string' ||
-    !pickupLocation || typeof pickupLocation !== 'string' ||
-    !dropoffLocation || typeof dropoffLocation !== 'string' ||
-    !pickupTime || typeof pickupTime !== 'string' ||
-    !dropoffTime || typeof dropoffTime !== 'string'
+    !carId || 
+    !from || 
+    !to || 
+    !pickupLocation || 
+    !dropoffLocation || 
+    !pickupTime || 
+    !dropoffTime
   ) {
     redirect('/');
   }
