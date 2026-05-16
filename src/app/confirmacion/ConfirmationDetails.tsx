@@ -156,7 +156,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
     const currentId = orderId || generateOrderId();
     if (!orderId) setOrderId(currentId);
 
-    // Registrar en Firestore sin bloquear
+    // Registrar en Firestore sin bloquear la UI
     registerInFirestore(currentId);
 
     setTimeout(async () => {
@@ -191,13 +191,15 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
     const currentId = orderId || generateOrderId();
     if (!orderId) setOrderId(currentId);
 
-    // Registrar y abrir WhatsApp
     try {
+      // Registrar y redirigir
       await registerInFirestore(currentId);
       const message = `¡Hola! Mi ID de pedido es: ${currentId}. Quiero confirmar mi reserva de auto.`;
-      window.location.href = `https://wa.me/15879120936?text=${encodeURIComponent(message)}`;
+      const waUrl = `https://wa.me/15879120936?text=${encodeURIComponent(message)}`;
+      window.location.href = waUrl;
     } catch (e) {
       console.error("WhatsApp error:", e);
+      toast({ variant: "destructive", title: "Error al procesar WhatsApp." });
     } finally {
       setIsSubmittingWhatsApp(false);
     }
@@ -335,7 +337,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
             </Card>
         </div>
 
-        {/* Factura Proforma (Hidden) */}
+        {/* Factura Proforma (Hidden para captura) */}
         <div className="absolute left-[-9999px] top-[-9999px]">
           <div ref={invoiceRef} className="p-10 bg-white text-black w-[210mm] font-sans">
             <div className="flex justify-between items-center border-b-4 border-primary pb-6 mb-8">
