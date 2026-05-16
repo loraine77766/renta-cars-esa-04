@@ -156,7 +156,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
     const currentId = orderId || generateOrderId();
     if (!orderId) setOrderId(currentId);
 
-    // Registrar en Firestore sin bloquear la UI
+    // Registrar en segundo plano
     registerInFirestore(currentId);
 
     setTimeout(async () => {
@@ -192,11 +192,15 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
     if (!orderId) setOrderId(currentId);
 
     try {
-      // Registrar y redirigir
-      await registerInFirestore(currentId);
+      // Registrar e intentar redirigir rápido
+      registerInFirestore(currentId);
+      
       const message = `¡Hola! Mi ID de pedido es: ${currentId}. Quiero confirmar mi reserva de auto.`;
       const waUrl = `https://wa.me/15879120936?text=${encodeURIComponent(message)}`;
-      window.location.href = waUrl;
+      
+      // Abrir en nueva pestaña o misma según dispositivo
+      window.open(waUrl, '_blank');
+      toast({ title: "Abriendo WhatsApp..." });
     } catch (e) {
       console.error("WhatsApp error:", e);
       toast({ variant: "destructive", title: "Error al procesar WhatsApp." });
@@ -292,7 +296,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
                                   <Button 
                                     type="button"
                                     onClick={handleDownloadInvoice}
-                                    className="w-full h-auto py-5 text-lg gap-3 bg-primary hover:bg-primary/90 shadow-lg text-white font-bold whitespace-normal"
+                                    className="w-full h-auto py-5 text-lg gap-3 bg-primary hover:bg-primary/90 shadow-lg text-white font-bold whitespace-normal text-wrap"
                                     disabled={isDownloadingInvoice}
                                   >
                                     {isDownloadingInvoice ? <Loader2 className="h-6 w-6 animate-spin" /> : <><FileText className="h-6 w-6 shrink-0" /> Descargar Factura Proforma</>}
@@ -301,7 +305,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
                                   <Button 
                                     type="button"
                                     onClick={handleWhatsApp}
-                                    className="w-full h-auto py-5 text-lg gap-3 bg-green-600 hover:bg-green-700 shadow-lg text-white font-bold whitespace-normal"
+                                    className="w-full h-auto py-5 text-lg gap-3 bg-green-600 hover:bg-green-700 shadow-lg text-white font-bold whitespace-normal text-wrap"
                                     disabled={isSubmittingWhatsApp}
                                   >
                                     {isSubmittingWhatsApp ? <Loader2 className="h-6 w-6 animate-spin" /> : <><MessageCircle className="h-6 w-6 shrink-0" /> Confirmar por WhatsApp</>}
