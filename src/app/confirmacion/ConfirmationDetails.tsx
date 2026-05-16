@@ -147,16 +147,19 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
 
   const handleDownloadInvoice = async () => {
     const isValid = await form.trigger();
-    if (!isValid) return;
+    if (!isValid) {
+      toast({ variant: "destructive", title: "Por favor, completa los datos obligatorios." });
+      return;
+    }
 
     setIsDownloadingInvoice(true);
     const currentId = orderId || generateOrderId();
     if (!orderId) setOrderId(currentId);
 
-    // Registro en segundo plano
+    // Registrar en Firestore sin esperar el await para no bloquear la UI
     registerInFirestore(currentId);
 
-    // Pequeño delay para que el ID se renderice en la factura oculta
+    // Pequeño delay para asegurar que el ID se renderice en la factura oculta
     setTimeout(async () => {
       if (invoiceRef.current) {
         try {
@@ -183,7 +186,10 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
 
   const handleWhatsApp = async () => {
     const isValid = await form.trigger();
-    if (!isValid) return;
+    if (!isValid) {
+      toast({ variant: "destructive", title: "Por favor, completa los datos obligatorios." });
+      return;
+    }
 
     setIsSubmittingWhatsApp(true);
     const currentId = orderId || generateOrderId();
