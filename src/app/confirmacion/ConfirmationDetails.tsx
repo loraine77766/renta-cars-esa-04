@@ -21,7 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
-import { Loader2, MessageCircle, CheckCircle2, FileText } from 'lucide-react';
+import { Loader2, MessageCircle, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ConfirmationDetailsProps {
@@ -47,6 +47,7 @@ const formSchema = z.object({
   passport: z.string().min(5, { message: 'El número de pasaporte es requerido.' }),
   driversLicense: z.string().min(5, { message: 'El número de licencia es requerido.' }),
   email: z.string().email({ message: 'El correo electrónico no es válido.' }),
+  flight: z.string().optional(),
   paymentOption: z.enum(['deposit', 'full_payment']).default('deposit'),
 }).refine(data => {
     try {
@@ -64,7 +65,6 @@ const formSchema = z.object({
 });
 
 export default function ConfirmationDetails({ car, startDate, endDate, pickupLocation, dropoffLocation, pickupTime, dropoffTime, reservationDetails }: ConfirmationDetailsProps) {
-  const router = useRouter();
   const firestore = useFirestore();
   const { toast } = useToast();
   const invoiceRef = useRef<HTMLDivElement>(null);
@@ -99,12 +99,13 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
       passport: '',
       driversLicense: '',
       email: '',
+      flight: '',
       paymentOption: 'deposit',
     },
   });
   
   const paymentOption = form.watch('paymentOption');
-  const amountToPay = paymentOption === 'full_payment' ? reservationDetails.totalWithDiscount : reservationDetails.deposit;
+  const amountToPay = paymentOption === 'full_payment' ? reservationDetails.totalWithDiscount : (reservationDetails.rentPrice + 250); // Rent + Deposit if paying later, or use logic from utils
 
   const generateOrderId = () => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -127,6 +128,8 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
         customerPassport: values.passport,
         customerLicense: values.driversLicense,
         customerCountry: values.country,
+        customerDOB: `${values.birthDay}/${values.birthMonth}/${values.birthYear}`,
+        customerFlight: values.flight || 'N/A',
         carName: car.name,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
@@ -152,9 +155,9 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
     setOrderId(currentId);
 
     // Registro silencioso
-    registerInFirestore(currentId);
+    await registerInFirestore(currentId);
 
-    // Generación de PDF
+    // Generación de PDF con un pequeño delay para asegurar que el DOM se actualice
     setTimeout(async () => {
       if (invoiceRef.current) {
         try {
@@ -165,7 +168,10 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
           const pdfWidth = pdf.internal.pageSize.getWidth();
           const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
           pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-          pdf.save(`Factura_RentaCarsESA_${currentId}.pdf`);
+          
+          const fileName = `Factura_${form.getValues('name')}_${form.getValues('lastName1')}_${currentId}.pdf`.replace(/\s+/g, '_');
+          pdf.save(fileName);
+          
           toast({ title: "Factura descargada correctamente." });
         } catch (error) {
           console.error("PDF Error:", error);
@@ -173,7 +179,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
         }
       }
       setIsDownloading(false);
-    }, 100);
+    }, 500);
   };
 
   const handleRegisterAndWhatsApp = async () => {
@@ -184,14 +190,12 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
     const currentId = orderId || generateOrderId();
     setOrderId(currentId);
 
-    // Registro silencioso
-    registerInFirestore(currentId);
+    await registerInFirestore(currentId);
 
     const message = `¡Hola! Mi ID de pedido es: ${currentId}`;
     window.open(`https://wa.me/15879120936?text=${encodeURIComponent(message)}`, '_blank');
     
     setIsSubmitting(false);
-    toast({ title: "Redirigiendo a WhatsApp..." });
   };
 
   return (
@@ -244,8 +248,11 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
                                     <FormField control={form.control} name="driversLicense" render={({ field }) => (
                                         <FormItem><FormLabel>Licencia de Conducir *</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                                     )}/>
+                                    <FormField control={form.control} name="flight" render={({ field }) => (
+                                        <FormItem><FormLabel>Vuelo / Aerolínea (Opcional)</FormLabel><FormControl><Input placeholder="Ej: IB6621 Iberia" {...field} /></FormControl><FormMessage /></FormItem>
+                                    )}/>
                                     <FormField control={form.control} name="email" render={({ field }) => (
-                                        <FormItem className="md:col-span-2"><FormLabel>Correo Electrónico *</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
+                                        <FormItem><FormLabel>Correo Electrónico *</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
                                     )}/>
                                 </div>
                                 
@@ -260,8 +267,8 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <label className={`block p-4 border rounded-lg cursor-pointer transition-all ${field.value === 'deposit' ? 'border-primary ring-2 ring-primary bg-primary/5' : 'border-border'}`}>
                                                     <input type="radio" {...field} value="deposit" checked={field.value === 'deposit'} className="sr-only" />
-                                                    <h4 className="font-semibold text-sm">Depósito de Reserva ($250)</h4>
-                                                    <p className="text-[10px] text-muted-foreground">Reembolsable al entregar el auto.</p>
+                                                    <h4 className="font-semibold text-sm">Pago Posterior (Renta + Depósito)</h4>
+                                                    <p className="text-[10px] text-muted-foreground">Paga al recibir el auto.</p>
                                                 </label>
                                                 <label className={`block p-4 border rounded-lg cursor-pointer transition-all ${field.value === 'full_payment' ? 'border-primary ring-2 ring-primary bg-primary/5' : 'border-border'}`}>
                                                     <input type="radio" {...field} value="full_payment" checked={field.value === 'full_payment'} className="sr-only" />
@@ -273,11 +280,6 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
                                     </FormItem>
                                     )}
                                 />
-
-                                <div className="bg-secondary/30 p-6 rounded-lg text-center border border-dashed border-primary/20">
-                                    <p className="text-xs text-muted-foreground mb-1">Monto a abonar:</p>
-                                    <p className="font-bold text-4xl text-primary font-mono">${amountToPay.toFixed(2)}</p>
-                                </div>
 
                                 <div className="pt-4 space-y-4">
                                   <Button 
@@ -321,53 +323,106 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
                     </Table>
                     <Separator />
                     <div className="flex justify-between items-center text-xl font-bold text-primary">
-                        <span>Total:</span>
-                        <span className="font-mono">${reservationDetails.totalWithoutDiscount.toFixed(2)}</span>
+                        <span>Monto Total:</span>
+                        <span className="font-mono">${amountToPay.toFixed(2)}</span>
                     </div>
                 </CardContent>
             </Card>
         </div>
 
-        {/* Factura Oculta para Generación de PDF */}
+        {/* Factura Proforma Detallada (Hidden for PDF generation) */}
         <div className="absolute left-[-9999px] top-[-9999px]">
           <div ref={invoiceRef} className="p-10 bg-white text-black w-[210mm] font-sans">
-            <div className="flex justify-between items-center border-b-2 border-primary pb-6">
+            <div className="flex justify-between items-center border-b-4 border-primary pb-6 mb-8">
               <div>
-                <h1 className="text-3xl font-bold text-primary">FACTURA PROFORMA</h1>
-                <p className="text-sm">Renta Cars ESA - Blues Group USA LLC</p>
+                <h1 className="text-4xl font-bold text-primary">FACTURA PROFORMA</h1>
+                <p className="text-md font-semibold mt-1">Renta Cars ESA - Blues Group USA LLC</p>
+                <p className="text-xs text-muted-foreground">1317 Edgewater Dr Unit 1858, Orlando, FL 32804</p>
               </div>
               <div className="text-right">
-                <p className="font-bold">ID Reserva: {orderId || 'PENDIENTE'}</p>
-                <p className="text-sm">Fecha: {format(new Date(), "dd/MM/yyyy")}</p>
+                <div className="bg-primary text-white p-2 rounded mb-2">
+                  <p className="text-xs uppercase font-bold">ID de Reserva</p>
+                  <p className="text-xl font-mono font-bold">{orderId || 'PENDIENTE'}</p>
+                </div>
+                <p className="text-sm font-bold">Fecha: {format(new Date(), "dd/MM/yyyy")}</p>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-10 my-8">
-              <div>
-                <h3 className="font-bold border-b mb-2">CLIENTE</h3>
-                <p className="text-sm uppercase">{form.getValues('name')} {form.getValues('lastName1')}</p>
-                <p className="text-sm">Pje: {form.getValues('passport')}</p>
-                <p className="text-sm">Lic: {form.getValues('driversLicense')}</p>
-                <p className="text-sm">País: {form.getValues('country')}</p>
+
+            <div className="grid grid-cols-2 gap-10 mb-8">
+              <div className="border border-primary/20 p-4 rounded-lg">
+                <h3 className="font-bold text-primary border-b-2 border-primary/10 mb-3 pb-1 uppercase text-sm">Datos del Conductor</h3>
+                <div className="space-y-1 text-sm">
+                  <p><span className="font-bold">Nombre:</span> {form.getValues('name')} {form.getValues('lastName1')} {form.getValues('lastName2')}</p>
+                  <p><span className="font-bold">Nacimiento:</span> {form.getValues('birthDay')}/{form.getValues('birthMonth')}/{form.getValues('birthYear')}</p>
+                  <p><span className="font-bold">Teléfono:</span> {form.getValues('phone')}</p>
+                  <p><span className="font-bold">País:</span> {form.getValues('country')}</p>
+                  <p><span className="font-bold">Email:</span> {form.getValues('email')}</p>
+                  <p><span className="font-bold">Pasaporte:</span> {form.getValues('passport')}</p>
+                  <p><span className="font-bold">Licencia:</span> {form.getValues('driversLicense')}</p>
+                  <p><span className="font-bold">Vuelo:</span> {form.getValues('flight') || 'N/A'}</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold border-b mb-2">DETALLES DE RENTA</h3>
-                <p className="text-sm">Vehículo: {car.name}</p>
-                <p className="text-sm">Días: {reservationDetails.rentalDays}</p>
-                <p className="text-sm">Desde: {formattedDates.start}</p>
-                <p className="text-sm">Hasta: {formattedDates.end}</p>
+              <div className="border border-primary/20 p-4 rounded-lg">
+                <h3 className="font-bold text-primary border-b-2 border-primary/10 mb-3 pb-1 uppercase text-sm">Detalles de Renta</h3>
+                <div className="space-y-1 text-sm">
+                  <p><span className="font-bold">Vehículo:</span> {car.name}</p>
+                  <p><span className="font-bold">Días de Renta:</span> {reservationDetails.rentalDays}</p>
+                  <p><span className="font-bold">Recogida:</span> {formattedDates.start}</p>
+                  <p className="text-xs ml-4 text-muted-foreground">{pickupLocation}</p>
+                  <p><span className="font-bold">Devolución:</span> {formattedDates.end}</p>
+                  <p className="text-xs ml-4 text-muted-foreground">{dropoffLocation}</p>
+                </div>
               </div>
             </div>
-            <div className="bg-gray-100 p-6 rounded">
-              <div className="flex justify-between mb-2"><span>Precio Renta ({reservationDetails.rentalDays} días):</span><span>${reservationDetails.rentPrice.toFixed(2)}</span></div>
-              <div className="flex justify-between mb-2"><span>Depósito de Garantía:</span><span>$250.00</span></div>
-              {form.getValues('paymentOption') === 'full_payment' && (
-                <div className="flex justify-between text-green-600 font-bold mb-2"><span>Descuento Pago Adelantado (20%):</span><span>-${reservationDetails.discountAmount.toFixed(2)}</span></div>
-              )}
-              <Separator className="my-4" />
-              <div className="flex justify-between text-xl font-bold"><span>MONTO TOTAL:</span><span>${amountToPay.toFixed(2)}</span></div>
+
+            <div className="mb-8">
+              <h3 className="font-bold text-primary border-b-2 border-primary/10 mb-3 pb-1 uppercase text-sm">Desglose del Costo</h3>
+              <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center text-sm">
+                    <span>Precio Renta ({reservationDetails.rentalDays} días x ${car.pricePerDay}/día):</span>
+                    <span className="font-mono font-bold">${reservationDetails.rentPrice.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span>Depósito de Garantía (Reembolsable):</span>
+                    <span className="font-mono font-bold">$250.00</span>
+                  </div>
+                  
+                  <Separator className="my-2" />
+                  
+                  <div className="flex justify-between items-center text-md">
+                    <span>Subtotal sin descuentos:</span>
+                    <span className="font-mono font-bold">${(reservationDetails.rentPrice + 250).toFixed(2)}</span>
+                  </div>
+
+                  {form.getValues('paymentOption') === 'full_payment' && (
+                    <div className="flex justify-between items-center text-green-600 font-bold bg-green-50 p-2 rounded">
+                      <span>Descuento Pago Adelantado (20% sobre renta):</span>
+                      <span className="font-mono">-${reservationDetails.discountAmount.toFixed(2)}</span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center text-2xl font-bold text-primary mt-4 border-t-2 border-primary pt-4">
+                    <span>MONTO TOTAL A PAGAR:</span>
+                    <span className="font-mono">${amountToPay.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="mt-10 text-[10px] text-gray-500 italic">
-              * Esta es una factura proforma informativa. Para confirmar su reserva debe contactar con soporte vía WhatsApp proporcionando su ID de reserva. El depósito de garantía es reembolsable al finalizar la renta.
+
+            <div className="mt-12 text-[11px] text-gray-500 border-t pt-6">
+              <p className="font-bold mb-2">TÉRMINOS IMPORTANTES:</p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>Esta es una <span className="font-bold">FACTURA PROFORMA</span> informativa para la gestión de su reserva.</li>
+                <li>Para confirmar su reserva, debe contactar con soporte vía WhatsApp proporcionando su <span className="font-bold">ID de Reserva</span>.</li>
+                <li>El <span className="font-bold">Depósito de Garantía</span> será reembolsado íntegramente al finalizar el período de renta si el vehículo no presenta daños.</li>
+                <li>En caso de accidente o daños, los costos de reparación se deducirán del depósito de garantía.</li>
+              </ul>
+            </div>
+            
+            <div className="mt-10 text-center border-t border-dashed pt-4">
+              <p className="text-xs text-primary font-bold">Renta Cars ESA - Expertos en Renta de Autos en Cuba</p>
+              <p className="text-[10px] text-muted-foreground">WhatsApp: +1 (587) 912-0936 | Email: info@bluesgroupusa.com</p>
             </div>
           </div>
         </div>
