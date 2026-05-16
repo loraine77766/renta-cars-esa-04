@@ -8,7 +8,6 @@ import { es } from 'date-fns/locale';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useRouter } from 'next/navigation';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useFirestore } from '@/firebase/index';
 import jsPDF from 'jspdf';
@@ -47,7 +46,7 @@ const formSchema = z.object({
   passport: z.string().min(5, { message: 'El número de pasaporte es requerido.' }),
   driversLicense: z.string().min(5, { message: 'El número de licencia es requerido.' }),
   email: z.string().email({ message: 'El correo electrónico no es válido.' }),
-  flight: z.string().optional(),
+  flight: z.string().default(''),
   paymentOption: z.enum(['deposit', 'full_payment']).default('deposit'),
 }).refine(data => {
     try {
@@ -71,8 +70,8 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
   
   const [formattedDates, setFormattedDates] = useState({ start: '', end: '' });
   const [orderId, setOrderId] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
+  const [isSubmittingWhatsApp, setIsSubmittingWhatsApp] = useState(false);
+  const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
   
   useEffect(() => {
     try {
@@ -105,7 +104,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
   });
   
   const paymentOption = form.watch('paymentOption');
-  const amountToPay = paymentOption === 'full_payment' ? reservationDetails.totalWithDiscount : (reservationDetails.rentPrice + 250); // Rent + Deposit if paying later, or use logic from utils
+  const amountToPay = paymentOption === 'full_payment' ? reservationDetails.totalWithDiscount : (reservationDetails.rentPrice + 250);
 
   const generateOrderId = () => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -150,23 +149,23 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
     const isValid = await form.trigger();
     if (!isValid) return;
 
-    setIsDownloading(true);
+    setIsDownloadingInvoice(true);
     const currentId = orderId || generateOrderId();
-    setOrderId(currentId);
+    if (!orderId) setOrderId(currentId);
 
-    // Registro silencioso
-    await registerInFirestore(currentId);
+    // Registro en segundo plano
+    registerInFirestore(currentId);
 
-    // Generación de PDF con un pequeño delay para asegurar que el DOM se actualice
+    // Pequeño delay para que el ID se renderice en la factura oculta
     setTimeout(async () => {
       if (invoiceRef.current) {
         try {
-          const canvas = await html2canvas(invoiceRef.current, { scale: 2 });
+          const canvas = await html2canvas(invoiceRef.current, { scale: 2, useCORS: true });
           const imgData = canvas.toDataURL('image/png');
           const pdf = new jsPDF('p', 'mm', 'a4');
-          const imgProps = pdf.getImageProperties(imgData);
           const pdfWidth = pdf.internal.pageSize.getWidth();
-          const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+          const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+          
           pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
           
           const fileName = `Factura_${form.getValues('name')}_${form.getValues('lastName1')}_${currentId}.pdf`.replace(/\s+/g, '_');
@@ -178,24 +177,24 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
           toast({ variant: "destructive", title: "Error al generar factura." });
         }
       }
-      setIsDownloading(false);
+      setIsDownloadingInvoice(false);
     }, 500);
   };
 
-  const handleRegisterAndWhatsApp = async () => {
+  const handleWhatsApp = async () => {
     const isValid = await form.trigger();
     if (!isValid) return;
 
-    setIsSubmitting(true);
+    setIsSubmittingWhatsApp(true);
     const currentId = orderId || generateOrderId();
-    setOrderId(currentId);
+    if (!orderId) setOrderId(currentId);
 
     await registerInFirestore(currentId);
 
     const message = `¡Hola! Mi ID de pedido es: ${currentId}`;
     window.open(`https://wa.me/15879120936?text=${encodeURIComponent(message)}`, '_blank');
     
-    setIsSubmitting(false);
+    setIsSubmittingWhatsApp(false);
   };
 
   return (
@@ -286,18 +285,18 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
                                     type="button"
                                     onClick={handleDownloadInvoice}
                                     className="w-full h-auto py-5 text-lg gap-3 bg-primary hover:bg-primary/90 shadow-lg text-white font-bold whitespace-normal"
-                                    disabled={isDownloading}
+                                    disabled={isDownloadingInvoice}
                                   >
-                                    {isDownloading ? <Loader2 className="h-6 w-6 animate-spin" /> : <><FileText className="h-6 w-6 shrink-0" /> Descargar Factura Proforma</>}
+                                    {isDownloadingInvoice ? <Loader2 className="h-6 w-6 animate-spin" /> : <><FileText className="h-6 w-6 shrink-0" /> Descargar Factura Proforma</>}
                                   </Button>
 
                                   <Button 
                                     type="button"
-                                    onClick={handleRegisterAndWhatsApp}
+                                    onClick={handleWhatsApp}
                                     className="w-full h-auto py-5 text-lg gap-3 bg-green-600 hover:bg-green-700 shadow-lg text-white font-bold whitespace-normal"
-                                    disabled={isSubmitting}
+                                    disabled={isSubmittingWhatsApp}
                                   >
-                                    {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin" /> : <><MessageCircle className="h-6 w-6 shrink-0" /> Confirmar por WhatsApp</>}
+                                    {isSubmittingWhatsApp ? <Loader2 className="h-6 w-6 animate-spin" /> : <><MessageCircle className="h-6 w-6 shrink-0" /> Confirmar por WhatsApp</>}
                                   </Button>
                                 </div>
                             </form>
@@ -418,11 +417,6 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
                 <li>El <span className="font-bold">Depósito de Garantía</span> será reembolsado íntegramente al finalizar el período de renta si el vehículo no presenta daños.</li>
                 <li>En caso de accidente o daños, los costos de reparación se deducirán del depósito de garantía.</li>
               </ul>
-            </div>
-            
-            <div className="mt-10 text-center border-t border-dashed pt-4">
-              <p className="text-xs text-primary font-bold">Renta Cars ESA - Expertos en Renta de Autos en Cuba</p>
-              <p className="text-[10px] text-muted-foreground">WhatsApp: +1 (587) 912-0936 | Email: info@bluesgroupusa.com</p>
             </div>
           </div>
         </div>
