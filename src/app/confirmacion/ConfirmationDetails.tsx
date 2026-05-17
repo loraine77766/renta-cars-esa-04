@@ -34,17 +34,17 @@ interface ConfirmationDetailsProps {
 }
 
 const formSchema = z.object({
-  name: z.string().min(2, { message: 'El nombre es requerido.' }),
-  lastName1: z.string().min(2, { message: 'El primer apellido es requerido.' }),
+  name: z.string().min(2, { message: 'Requerido' }),
+  lastName1: z.string().min(2, { message: 'Requerido' }),
   lastName2: z.string().default(''),
   birthDay: z.string().min(1, 'Día'),
   birthMonth: z.string().min(1, 'Mes'),
   birthYear: z.string().min(4, 'Año'),
-  phone: z.string().min(5, { message: 'El teléfono es requerido.' }),
-  country: z.string().min(2, { message: 'El país es requerido.' }),
-  passport: z.string().min(5, { message: 'El pasaporte es requerido.' }),
-  driversLicense: z.string().min(5, { message: 'La licencia es requerida.' }),
-  email: z.string().email({ message: 'Email inválido.' }),
+  phone: z.string().min(5, { message: 'Requerido' }),
+  country: z.string().min(2, { message: 'Requerido' }),
+  passport: z.string().min(5, { message: 'Requerido' }),
+  driversLicense: z.string().min(5, { message: 'Requerido' }),
+  email: z.string().email({ message: 'Email inválido' }),
   flight: z.string().default(''),
   paymentOption: z.enum(['deposit', 'full_payment']).default('deposit'),
 }).refine(data => {
@@ -67,21 +67,13 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
   const [orderId, setOrderId] = useState<string>('');
   const [isSubmittingWhatsApp, setIsSubmittingWhatsApp] = useState(false);
   const [isSubmittingInvoice, setIsSubmittingInvoice] = useState(false);
-  const [formattedDates, setFormattedDates] = useState({ start: '', end: '' });
 
   useEffect(() => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let res = '';
     for (let i = 0; i < 8; i++) res += chars.charAt(Math.floor(Math.random() * chars.length));
     setOrderId(res);
-
-    try {
-      setFormattedDates({
-        start: format(startDate, "EEE dd/MM/yyyy", { locale: es }) + " - " + pickupTime,
-        end: format(endDate, "EEE dd/MM/yyyy", { locale: es }) + " - " + dropoffTime,
-      });
-    } catch (e) { console.error(e); }
-  }, [startDate, endDate, pickupTime, dropoffTime]);
+  }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -117,15 +109,12 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
         paymentOption: values.paymentOption,
         createdAt: serverTimestamp(),
       });
-    } catch (e) { console.error("Error al registrar:", e); }
+    } catch (e) { console.error(e); }
   };
 
   const handleDownloadInvoice = async () => {
     const isValid = await form.trigger();
-    if (!isValid) {
-      toast({ variant: "destructive", title: "Completa los datos obligatorios." });
-      return;
-    }
+    if (!isValid) return;
     setIsSubmittingInvoice(true);
     await registerInFirestore(orderId);
     
@@ -139,11 +128,8 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
           const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
           pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
           pdf.save(`Factura_${form.getValues('name')}_${orderId}.pdf`);
-          toast({ title: "Factura descargada correctamente." });
-        } catch (e) { 
-          console.error(e);
-          toast({ variant: "destructive", title: "Error al generar PDF." }); 
-        }
+          toast({ title: "Factura descargada." });
+        } catch (e) { toast({ variant: "destructive", title: "Error PDF." }); }
       }
       setIsSubmittingInvoice(false);
     }, 500);
@@ -151,10 +137,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
 
   const handleWhatsApp = async () => {
     const isValid = await form.trigger();
-    if (!isValid) {
-      toast({ variant: "destructive", title: "Completa los datos obligatorios." });
-      return;
-    }
+    if (!isValid) return;
     setIsSubmittingWhatsApp(true);
     await registerInFirestore(orderId);
     const msg = `¡Hola! Mi ID de pedido es: ${orderId}. Quiero confirmar mi reserva de auto.`;
@@ -165,9 +148,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
   return (
     <div className="max-w-6xl mx-auto px-2 md:px-4">
         <h1 className="font-headline text-2xl md:text-4xl font-bold text-primary mb-2 text-center">Finaliza tu Reserva</h1>
-        <p className="text-center text-sm text-muted-foreground mb-8">Completa tus datos para confirmar tu renta en Cuba.</p>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start mt-8">
             <div className="lg:col-span-2 space-y-8">
                 <Card className="shadow-lg border-2 border-primary/5">
                     <CardHeader className="bg-primary/5"><CardTitle className="font-headline text-xl text-primary">Datos del Conductor</CardTitle></CardHeader>
@@ -175,24 +156,18 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
                         <Form {...form}>
                             <form className="space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <FormField control={form.control} name="name" render={({ field }) => (
-                                        <FormItem><FormLabel>Nombre *</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                                    )}/>
-                                    <FormField control={form.control} name="lastName1" render={({ field }) => (
-                                        <FormItem><FormLabel>1. Apellido *</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                                    )}/>
-                                    <FormField control={form.control} name="lastName2" render={({ field }) => (
-                                        <FormItem><FormLabel>2. Apellido</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                                    )}/>
+                                    <FormField control={form.control} name="name" render={({ field }) => (<FormItem><FormLabel>Nombre *</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                                    <FormField control={form.control} name="lastName1" render={({ field }) => (<FormItem><FormLabel>1. Apellido *</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                                    <FormField control={form.control} name="lastName2" render={({ field }) => (<FormItem><FormLabel>2. Apellido</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>)}/>
                                     <div className="space-y-2">
                                         <FormLabel>Nacimiento *</FormLabel>
                                         <div className="grid grid-cols-3 gap-2">
-                                            <FormField control={form.control} name="birthDay" render={({ field }) => (<FormControl><Input placeholder="Día" type="number" {...field} /></FormControl>)}/>
-                                            <FormField control={form.control} name="birthMonth" render={({ field }) => (<FormControl><Input placeholder="Mes" type="number" {...field} /></FormControl>)}/>
-                                            <FormField control={form.control} name="birthYear" render={({ field }) => (<FormControl><Input placeholder="Año" type="number" {...field} /></FormControl>)}/>
+                                            <FormField control={form.control} name="birthDay" render={({ field }) => (<FormControl><Input placeholder="Día" {...field} /></FormControl>)}/>
+                                            <FormField control={form.control} name="birthMonth" render={({ field }) => (<FormControl><Input placeholder="Mes" {...field} /></FormControl>)}/>
+                                            <FormField control={form.control} name="birthYear" render={({ field }) => (<FormControl><Input placeholder="Año" {...field} /></FormControl>)}/>
                                         </div>
                                     </div>
-                                    <FormField control={form.control} name="phone" render={({ field }) => (<FormItem><FormLabel>WhatsApp *</FormLabel><FormControl><Input placeholder="+1..." {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                                    <FormField control={form.control} name="phone" render={({ field }) => (<FormItem><FormLabel>WhatsApp *</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
                                     <FormField control={form.control} name="country" render={({ field }) => (<FormItem><FormLabel>País *</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
                                     <FormField control={form.control} name="passport" render={({ field }) => (<FormItem><FormLabel>Pasaporte *</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
                                     <FormField control={form.control} name="driversLicense" render={({ field }) => (<FormItem><FormLabel>Licencia *</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)}/>
@@ -208,22 +183,22 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
                                                 <label className={`block p-4 border rounded-lg cursor-pointer transition-all ${field.value === 'deposit' ? 'border-primary ring-2 ring-primary bg-primary/5' : 'border-border'}`}>
                                                     <input type="radio" {...field} value="deposit" checked={field.value === 'deposit'} className="sr-only" />
                                                     <h4 className="font-semibold text-sm">Pago Posterior</h4>
-                                                    <p className="text-[10px] text-muted-foreground">Renta + Depósito al recibir el auto.</p>
+                                                    <p className="text-[10px] text-muted-foreground">Renta + Depósito al recibir.</p>
                                                 </label>
                                                 <label className={`block p-4 border rounded-lg cursor-pointer transition-all ${field.value === 'full_payment' ? 'border-primary ring-2 ring-primary bg-primary/5' : 'border-border'}`}>
                                                     <input type="radio" {...field} value="full_payment" checked={field.value === 'full_payment'} className="sr-only" />
                                                     <h4 className="font-semibold text-sm">Pago Adelantado (-20%)</h4>
-                                                    <p className="text-[10px] text-muted-foreground">Ahorra pagando la totalidad hoy.</p>
+                                                    <p className="text-[10px] text-muted-foreground">Ahorra pagando hoy.</p>
                                                 </label>
                                             </div>
                                         </FormControl>
                                     </FormItem>
                                 )}/>
                                 <div className="space-y-4 pt-4">
-                                    <Button type="button" onClick={handleDownloadInvoice} className="w-full h-auto py-5 text-lg gap-3 bg-primary hover:bg-primary/90 shadow-lg text-white font-bold text-wrap" disabled={isSubmittingInvoice}>
+                                    <Button type="button" onClick={handleDownloadInvoice} className="w-full h-auto py-5 text-lg gap-3 bg-primary hover:bg-primary/90 text-white font-bold text-wrap whitespace-normal" disabled={isSubmittingInvoice}>
                                         {isSubmittingInvoice ? <Loader2 className="h-6 w-6 animate-spin" /> : <><FileText className="h-6 w-6 shrink-0" /> Descargar Factura Proforma</>}
                                     </Button>
-                                    <Button type="button" onClick={handleWhatsApp} className="w-full h-auto py-5 text-lg gap-3 bg-green-600 hover:bg-green-700 shadow-lg text-white font-bold text-wrap" disabled={isSubmittingWhatsApp}>
+                                    <Button type="button" onClick={handleWhatsApp} className="w-full h-auto py-5 text-lg gap-3 bg-green-600 hover:bg-green-700 text-white font-bold text-wrap whitespace-normal" disabled={isSubmittingWhatsApp}>
                                         {isSubmittingWhatsApp ? <Loader2 className="h-6 w-6 animate-spin" /> : <><MessageCircle className="h-6 w-6 shrink-0" /> Confirmar por WhatsApp</>}
                                     </Button>
                                 </div>
@@ -237,11 +212,11 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
                 <CardHeader className="bg-primary/5"><CardTitle className="font-headline text-lg text-primary">Resumen del Viaje</CardTitle></CardHeader>
                 <CardContent className="pt-6 space-y-4">
                     <div className="relative h-32 w-full"><Image src={car.imageUrl} alt={car.name} fill className="object-cover rounded-lg shadow-sm" /></div>
-                    <Table><TableBody>
-                        <TableRow><TableCell className="font-semibold p-2 text-xs">Vehículo:</TableCell><TableCell className="p-2 text-xs">{car.name}</TableCell></TableRow>
-                        <TableRow><TableCell className="font-semibold p-2 text-xs">Total Días:</TableCell><TableCell className="p-2 text-xs">{reservationDetails.rentalDays}</TableCell></TableRow>
-                        <TableRow><TableCell className="font-semibold p-2 text-xs">ID Reserva:</TableCell><TableCell className="p-2 text-xs font-mono">{orderId}</TableCell></TableRow>
-                    </TableBody></Table>
+                    <div className="space-y-1 text-sm">
+                        <p className="font-bold">{car.name}</p>
+                        <p className="text-xs text-muted-foreground">{reservationDetails.rentalDays} días de renta</p>
+                        <p className="text-xs font-mono">ID: {orderId}</p>
+                    </div>
                     <Separator />
                     <div className="flex justify-between items-center text-xl font-bold text-primary">
                         <span>Total:</span><span className="font-mono">${amountToPay.toFixed(2)}</span>
@@ -250,84 +225,55 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
             </Card>
         </div>
 
-        {/* FACTURA DETALLADA PARA PDF */}
+        {/* FACTURA PARA PDF (HIDDEN) */}
         <div className="absolute left-[-9999px] top-[-9999px]">
           <div ref={invoiceRef} className="p-10 bg-white text-black w-[210mm] font-sans">
             <div className="flex justify-between items-center border-b-4 border-primary pb-6 mb-8">
               <div>
                 <h1 className="text-4xl font-bold text-primary">FACTURA PROFORMA</h1>
                 <p className="text-md font-semibold mt-1">Renta Cars ESA - Blues Group USA LLC</p>
-                <p className="text-xs text-muted-foreground">1317 Edgewater Dr Unit 1858, Orlando, FL 32804</p>
               </div>
               <div className="text-right">
-                <div className="bg-primary text-white p-2 rounded mb-2">
-                  <p className="text-xs uppercase font-bold">ID de Reserva</p>
-                  <p className="text-xl font-mono font-bold">{orderId}</p>
-                </div>
-                <p className="text-sm font-bold">Fecha: {format(new Date(), "dd/MM/yyyy")}</p>
+                <p className="text-xl font-mono font-bold">ID: {orderId}</p>
+                <p className="text-sm">Fecha: {format(new Date(), "dd/MM/yyyy")}</p>
               </div>
             </div>
             
             <div className="grid grid-cols-2 gap-10 mb-8">
               <div className="border border-primary/20 p-4 rounded-lg">
-                <h3 className="font-bold text-primary border-b-2 border-primary/10 mb-3 pb-1 uppercase text-sm">Detalles del Conductor</h3>
+                <h3 className="font-bold text-primary border-b-2 mb-3 pb-1 uppercase text-sm">Conductor</h3>
                 <div className="space-y-1 text-xs">
-                  <p><span className="font-bold">Nombre:</span> {form.getValues('name')} {form.getValues('lastName1')} {form.getValues('lastName2')}</p>
+                  <p><span className="font-bold">Nombre:</span> {form.getValues('name')} {form.getValues('lastName1')}</p>
                   <p><span className="font-bold">Nacimiento:</span> {form.getValues('birthDay')}/{form.getValues('birthMonth')}/{form.getValues('birthYear')}</p>
-                  <p><span className="font-bold">WhatsApp:</span> {form.getValues('phone')}</p>
-                  <p><span className="font-bold">Email:</span> {form.getValues('email')}</p>
                   <p><span className="font-bold">Pasaporte:</span> {form.getValues('passport')}</p>
                   <p><span className="font-bold">Licencia:</span> {form.getValues('driversLicense')}</p>
                   <p><span className="font-bold">País:</span> {form.getValues('country')}</p>
-                  {form.getValues('flight') && <p><span className="font-bold">Vuelo:</span> {form.getValues('flight')}</p>}
                 </div>
               </div>
               <div className="border border-primary/20 p-4 rounded-lg">
-                <h3 className="font-bold text-primary border-b-2 border-primary/10 mb-3 pb-1 uppercase text-sm">Resumen de la Renta</h3>
+                <h3 className="font-bold text-primary border-b-2 mb-3 pb-1 uppercase text-sm">Renta</h3>
                 <div className="space-y-1 text-xs">
                   <p><span className="font-bold">Vehículo:</span> {car.name}</p>
                   <p><span className="font-bold">Total Días:</span> {reservationDetails.rentalDays}</p>
-                  <p><span className="font-bold">Recogida:</span> {formattedDates.start}</p>
-                  <p className="text-[10px] ml-2 text-muted-foreground">{pickupLocation}</p>
-                  <p><span className="font-bold">Devolución:</span> {formattedDates.end}</p>
-                  <p className="text-[10px] ml-2 text-muted-foreground">{dropoffLocation}</p>
+                  <p><span className="font-bold">Recogida:</span> {format(startDate, "dd/MM/yy")} - {pickupLocation}</p>
+                  <p><span className="font-bold">Entrega:</span> {format(endDate, "dd/MM/yy")} - {dropoffLocation}</p>
                 </div>
               </div>
             </div>
 
-            <div>
-              <h3 className="font-bold text-primary border-b-2 border-primary/10 mb-3 pb-1 uppercase text-sm">Desglose del Costo Total</h3>
-              <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span>Costo de Renta ({reservationDetails.rentalDays} días):</span>
-                  <span className="font-bold">${reservationDetails.rentPrice.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Depósito Reembolsable:</span>
-                  <span className="font-bold">$250.00</span>
-                </div>
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Total sin descuento:</span>
-                  <span>${reservationDetails.totalWithoutDiscount.toFixed(2)}</span>
-                </div>
-                <Separator />
+            <div className="bg-gray-50 p-6 rounded-lg border">
+              <h3 className="font-bold text-primary mb-4 uppercase text-sm">Desglose de Costos</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between"><span>Renta:</span><span>${reservationDetails.rentPrice.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span>Depósito (Reembolsable):</span><span>$250.00</span></div>
                 {form.getValues('paymentOption') === 'full_payment' && (
-                  <div className="flex justify-between text-green-600 font-bold bg-green-50 p-2 rounded">
-                    <span>Descuento Aplicado (20%):</span>
-                    <span>-${reservationDetails.discountAmount.toFixed(2)}</span>
-                  </div>
+                  <div className="flex justify-between text-green-600"><span>Descuento (20%):</span><span>-${reservationDetails.discountAmount.toFixed(2)}</span></div>
                 )}
-                <div className="flex justify-between text-2xl font-bold text-primary mt-4 border-t-2 border-primary pt-4">
-                  <span>TOTAL A PAGAR:</span>
-                  <span className="font-mono">${amountToPay.toFixed(2)}</span>
-                </div>
+                <Separator className="my-2" />
+                <div className="flex justify-between text-2xl font-bold text-primary"><span>TOTAL:</span><span>${amountToPay.toFixed(2)}</span></div>
               </div>
             </div>
-            
-            <div className="mt-10 text-[10px] text-muted-foreground border-t pt-4">
-              <p className="font-bold text-black mb-1">Nota Legal:</p>
-              <p>Esta es una factura proforma generada por Renta Cars ESA. El contrato final se firmará en el punto de renta en Cuba. El depósito de garantía de $250 es reembolsable si el vehículo se devuelve sin daños.</p>
-            </div>
+            <p className="mt-10 text-[10px] text-muted-foreground border-t pt-4">Esta es una factura proforma de Renta Cars ESA. El contrato final se firma en Cuba. El depósito de $250 es reembolsable si el vehículo se devuelve íntegro.</p>
           </div>
         </div>
     </div>
