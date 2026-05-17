@@ -110,7 +110,6 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
       });
     } catch (e) { 
       console.error('Firestore Error:', e);
-      // Even if firestore fails, we proceed with the other actions to not block the user
     }
   };
 
@@ -121,7 +120,6 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
     setIsSubmittingInvoice(true);
     await registerInFirestore(orderId);
     
-    // Use a timeout to ensure React has rendered the values in the hidden invoice div
     setTimeout(async () => {
       if (invoiceRef.current) {
         try {

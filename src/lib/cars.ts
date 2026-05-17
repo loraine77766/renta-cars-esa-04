@@ -213,5 +213,21 @@ export const cars: Car[] = [
       pickupAndDropoff: ['Tolerancia 4h.'],
       notes: ['Mínimo: 3 días.', 'Seguro: $40/día.']
     }
+  },
+  {
+    id: 22,
+    name: 'Kia Stonic',
+    description: 'SUV subcompacto versátil y eficiente, ideal para el entorno urbano y viajes cómodos.',
+    pricePerDay: 80,
+    imageUrl: '/images/images/KiaStonic.jpg',
+    imageHint: 'suv crossover white',
+    features: ['5 Pasajeros', 'Automático', 'Motor 1.0L/1.4L', 'Bajo Consumo', 'Chapa ESA'],
+    details: {
+      additionalCharges: ['Pagos en oficina solo con tarjeta.'],
+      notIncluded: ['Depósito de garantía ($250).'],
+      included: ['Seguro diario.', 'Bajo consumo de combustible.'],
+      pickupAndDropoff: ['Tolerancia de 4 horas para la devolución.'],
+      notes: ['Mínimo: 3 días.', 'Seguro: $30/día.', 'Consumo: 14-16 km/litro.']
+    }
   }
 ];
