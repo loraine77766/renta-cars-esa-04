@@ -83,8 +83,8 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
     },
   });
 
-  const paymentOption = form.watch('paymentOption');
-  const amountToPay = paymentOption === 'full_payment' ? reservationDetails.totalWithDiscount : (reservationDetails.rentPrice + 250);
+  const formData = form.watch();
+  const amountToPay = formData.paymentOption === 'full_payment' ? reservationDetails.totalWithDiscount : (reservationDetails.rentPrice + 250);
 
   const registerInFirestore = async (currentId: string) => {
     if (!firestore) return;
@@ -121,7 +121,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
     setIsSubmittingInvoice(true);
     await registerInFirestore(orderId);
     
-    // Pequeña espera para asegurar que el DOM esté actualizado
+    // Pequeña pausa para asegurar que el elemento oculto esté actualizado con los datos del form
     setTimeout(async () => {
       if (invoiceRef.current) {
         try {
@@ -129,6 +129,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
             scale: 2, 
             useCORS: true,
             logging: false,
+            backgroundColor: '#ffffff'
           });
           const imgData = canvas.toDataURL('image/png');
           const pdf = new jsPDF('p', 'mm', 'a4');
@@ -136,7 +137,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
           const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
           pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
           
-          const fileName = `Factura_${form.getValues('name')}_${orderId}.pdf`;
+          const fileName = `Factura_${formData.name}_${orderId}.pdf`;
           pdf.save(fileName);
           toast({ title: "Factura descargada con éxito." });
         } catch (e) { 
@@ -145,7 +146,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
         }
       }
       setIsSubmittingInvoice(false);
-    }, 500);
+    }, 100);
   };
 
   const handleWhatsApp = async () => {
@@ -280,8 +281,8 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
             </Card>
         </div>
 
-        {/* FACTURA PARA PDF (HIDDEN) */}
-        <div className="fixed left-[-9999px] top-[-9999px]">
+        {/* FACTURA PARA PDF (OCULTA PERO RENDERIZADA) */}
+        <div className="opacity-0 pointer-events-none absolute -z-50" style={{ left: '-2000px', top: 0 }}>
           <div ref={invoiceRef} className="p-10 bg-white text-black w-[210mm] font-sans">
             <div className="flex justify-between items-center border-b-4 border-primary pb-6 mb-8">
               <div>
@@ -298,14 +299,14 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
               <div className="border border-primary/20 p-4 rounded-lg">
                 <h3 className="font-bold text-primary border-b-2 mb-3 pb-1 uppercase text-sm">Conductor</h3>
                 <div className="space-y-1 text-xs">
-                  <p><span className="font-bold">Nombre:</span> {form.getValues('name')} {form.getValues('lastName1')}</p>
-                  <p><span className="font-bold">Nacimiento:</span> {form.getValues('birthDay')}/{form.getValues('birthMonth')}/{form.getValues('birthYear')}</p>
-                  <p><span className="font-bold">WhatsApp:</span> {form.getValues('phone')}</p>
-                  <p><span className="font-bold">País:</span> {form.getValues('country')}</p>
-                  <p><span className="font-bold">Email:</span> {form.getValues('email')}</p>
-                  <p><span className="font-bold">Pasaporte:</span> {form.getValues('passport')}</p>
-                  <p><span className="font-bold">Licencia:</span> {form.getValues('driversLicense')}</p>
-                  <p><span className="font-bold">Vuelo:</span> {form.getValues('flight') || 'N/A'}</p>
+                  <p><span className="font-bold">Nombre:</span> {formData.name} {formData.lastName1}</p>
+                  <p><span className="font-bold">Nacimiento:</span> {formData.birthDay}/{formData.birthMonth}/{formData.birthYear}</p>
+                  <p><span className="font-bold">WhatsApp:</span> {formData.phone}</p>
+                  <p><span className="font-bold">País:</span> {formData.country}</p>
+                  <p><span className="font-bold">Email:</span> {formData.email}</p>
+                  <p><span className="font-bold">Pasaporte:</span> {formData.passport}</p>
+                  <p><span className="font-bold">Licencia:</span> {formData.driversLicense}</p>
+                  <p><span className="font-bold">Vuelo:</span> {formData.flight || 'N/A'}</p>
                 </div>
               </div>
               <div className="border border-primary/20 p-4 rounded-lg">
@@ -336,7 +337,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
                   <span>${(reservationDetails.rentPrice + 250).toFixed(2)}</span>
                 </div>
                 
-                {form.getValues('paymentOption') === 'full_payment' && (
+                {formData.paymentOption === 'full_payment' && (
                   <div className="flex justify-between text-green-600 font-semibold italic">
                     <span>Descuento por Pago Adelantado (20%):</span>
                     <span>-${reservationDetails.discountAmount.toFixed(2)}</span>
@@ -345,7 +346,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
                 
                 <Separator className="my-2" />
                 <div className="flex justify-between text-2xl font-bold text-primary">
-                  <span>{form.getValues('paymentOption') === 'full_payment' ? 'TOTAL CON DESCUENTO:' : 'TOTAL A PAGAR:'}</span>
+                  <span>{formData.paymentOption === 'full_payment' ? 'TOTAL CON DESCUENTO:' : 'TOTAL A PAGAR:'}</span>
                   <span>${amountToPay.toFixed(2)}</span>
                 </div>
               </div>
@@ -354,7 +355,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
             <div className="mt-8 border-t pt-4">
               <h4 className="font-bold text-sm mb-2 uppercase">Opción de Pago Seleccionada:</h4>
               <p className="text-xs bg-primary/5 p-3 rounded border border-primary/10 font-semibold">
-                {form.getValues('paymentOption') === 'full_payment' 
+                {formData.paymentOption === 'full_payment' 
                   ? "Pago Adelantado: Ahorras un 20% sobre el costo de la renta. Pagas el total hoy para asegurar tu tarifa." 
                   : "Pago Posterior: Pagas el costo de la renta y el depósito al recibir el vehículo en Cuba."}
               </p>
