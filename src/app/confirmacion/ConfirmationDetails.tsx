@@ -132,6 +132,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
     setIsSubmittingInvoice(true);
     await registerInFirestore(orderId);
     
+    // Pequeño retraso para asegurar que los datos del formulario se reflejen en la factura oculta
     setTimeout(async () => {
       if (invoiceRef.current) {
         try {
@@ -156,7 +157,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
         }
       }
       setIsSubmittingInvoice(false);
-    }, 100);
+    }, 150);
   };
 
   const handleWhatsApp = async () => {
@@ -169,7 +170,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
     const msg = `¡Hola! Mi ID de pedido es: ${orderId}. Quiero confirmar mi reserva de auto.`;
     window.location.href = `https://wa.me/15879120936?text=${encodeURIComponent(msg)}`;
     
-    setTimeout(() => setIsSubmittingWhatsApp(false), 2000);
+    setTimeout(() => setIsSubmittingWhatsApp(false), 1500);
   };
 
   return (
@@ -233,15 +234,9 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
                                       disabled={isSubmittingInvoice}
                                     >
                                         {isSubmittingInvoice ? (
-                                          <>
-                                            <Loader2 className="h-6 w-6 animate-spin" />
-                                            Generando Factura...
-                                          </>
+                                          <><Loader2 className="h-6 w-6 animate-spin" /> Generando Factura...</>
                                         ) : (
-                                          <>
-                                            <FileText className="h-6 w-6 shrink-0" /> 
-                                            Descargar Factura Proforma
-                                          </>
+                                          <><FileText className="h-6 w-6 shrink-0" /> Descargar Factura Proforma</>
                                         )}
                                     </Button>
                                     <Button 
@@ -251,15 +246,9 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
                                       disabled={isSubmittingWhatsApp}
                                     >
                                         {isSubmittingWhatsApp ? (
-                                          <>
-                                            <Loader2 className="h-6 w-6 animate-spin" />
-                                            Abriendo WhatsApp...
-                                          </>
+                                          <><Loader2 className="h-6 w-6 animate-spin" /> Abriendo WhatsApp...</>
                                         ) : (
-                                          <>
-                                            <MessageCircle className="h-6 w-6 shrink-0" /> 
-                                            Confirmar por WhatsApp
-                                          </>
+                                          <><MessageCircle className="h-6 w-6 shrink-0" /> Confirmar por WhatsApp</>
                                         )}
                                     </Button>
                                 </div>
@@ -291,9 +280,9 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
             </Card>
         </div>
 
-        {/* FACTURA PARA PDF (OCULTA PERO RENDERIZADA) */}
-        <div className="opacity-0 pointer-events-none absolute -z-50" style={{ left: '-2000px', top: 0 }}>
-          <div ref={invoiceRef} className="p-10 bg-white text-black w-[210mm] font-sans">
+        {/* FACTURA PARA PDF (OCULTA PERO RENDERIZADA PARA CAPTURA) */}
+        <div className="opacity-0 pointer-events-none absolute" style={{ left: '-5000px', top: 0, width: '210mm' }}>
+          <div ref={invoiceRef} className="p-10 bg-white text-black font-sans" style={{ width: '210mm' }}>
             <div className="flex justify-between items-center border-b-4 border-primary pb-6 mb-8">
               <div>
                 <h1 className="text-4xl font-bold text-primary">FACTURA PROFORMA</h1>
@@ -309,7 +298,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
               <div className="border border-primary/20 p-4 rounded-lg">
                 <h3 className="font-bold text-primary border-b-2 mb-3 pb-1 uppercase text-sm">Conductor</h3>
                 <div className="space-y-1 text-xs">
-                  <p><span className="font-bold">Nombre:</span> {formData.name} {formData.lastName1}</p>
+                  <p><span className="font-bold">Nombre:</span> {formData.name} {formData.lastName1} {formData.lastName2}</p>
                   <p><span className="font-bold">Nacimiento:</span> {formData.birthDay}/{formData.birthMonth}/{formData.birthYear}</p>
                   <p><span className="font-bold">WhatsApp:</span> {formData.phone}</p>
                   <p><span className="font-bold">País:</span> {formData.country}</p>
