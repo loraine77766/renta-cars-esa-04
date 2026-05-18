@@ -103,7 +103,8 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
         carName: car.name,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
-        pickupLocation, dropoffLocation,
+        pickupLocation, 
+        dropoffLocation,
         totalAmount: amountToPay,
         paymentOption: values.paymentOption,
         createdAt: serverTimestamp(),
@@ -120,16 +121,23 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
     setIsSubmittingInvoice(true);
     await registerInFirestore(orderId);
     
+    // Pequeña espera para asegurar que el DOM esté actualizado
     setTimeout(async () => {
       if (invoiceRef.current) {
         try {
-          const canvas = await html2canvas(invoiceRef.current, { scale: 2, useCORS: true });
+          const canvas = await html2canvas(invoiceRef.current, { 
+            scale: 2, 
+            useCORS: true,
+            logging: false,
+          });
           const imgData = canvas.toDataURL('image/png');
           const pdf = new jsPDF('p', 'mm', 'a4');
           const pdfWidth = pdf.internal.pageSize.getWidth();
           const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
           pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-          pdf.save(`Factura_${form.getValues('name')}_${orderId}.pdf`);
+          
+          const fileName = `Factura_${form.getValues('name')}_${orderId}.pdf`;
+          pdf.save(fileName);
           toast({ title: "Factura descargada con éxito." });
         } catch (e) { 
           console.error('PDF Error:', e);
@@ -149,16 +157,21 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
     
     const msg = `¡Hola! Mi ID de pedido es: ${orderId}. Quiero confirmar mi reserva de auto.`;
     window.location.href = `https://wa.me/15879120936?text=${encodeURIComponent(msg)}`;
-    setIsSubmittingWhatsApp(false);
+    
+    setTimeout(() => setIsSubmittingWhatsApp(false), 2000);
   };
 
   return (
     <div className="max-w-6xl mx-auto px-2 md:px-4">
         <h1 className="font-headline text-2xl md:text-4xl font-bold text-primary mb-2 text-center">Finaliza tu Reserva</h1>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start mt-8">
+        <p className="text-center text-sm text-muted-foreground mb-8">Completa tus datos para confirmar tu renta en Cuba.</p>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             <div className="lg:col-span-2 space-y-8">
                 <Card className="shadow-lg border-2 border-primary/5">
-                    <CardHeader className="bg-primary/5"><CardTitle className="font-headline text-xl text-primary">Datos del Conductor</CardTitle></CardHeader>
+                    <CardHeader className="bg-primary/5">
+                        <CardTitle className="font-headline text-xl text-primary">Datos del Conductor</CardTitle>
+                    </CardHeader>
                     <CardContent className="pt-6">
                         <Form {...form}>
                             <form className="space-y-6">
@@ -202,11 +215,41 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
                                     </FormItem>
                                 )}/>
                                 <div className="space-y-4 pt-4">
-                                    <Button type="button" onClick={handleDownloadInvoice} className="w-full h-auto py-5 text-lg gap-3 bg-primary hover:bg-primary/90 text-white font-bold whitespace-normal" disabled={isSubmittingInvoice}>
-                                        {isSubmittingInvoice ? <Loader2 className="h-6 w-6 animate-spin" /> : <><FileText className="h-6 w-6 shrink-0" /> Descargar Factura Proforma</>}
+                                    <Button 
+                                      type="button" 
+                                      onClick={handleDownloadInvoice} 
+                                      className="w-full h-auto py-5 text-lg gap-3 bg-primary hover:bg-primary/90 text-white font-bold whitespace-normal" 
+                                      disabled={isSubmittingInvoice}
+                                    >
+                                        {isSubmittingInvoice ? (
+                                          <>
+                                            <Loader2 className="h-6 w-6 animate-spin" />
+                                            Generando Factura...
+                                          </>
+                                        ) : (
+                                          <>
+                                            <FileText className="h-6 w-6 shrink-0" /> 
+                                            Descargar Factura Proforma
+                                          </>
+                                        )}
                                     </Button>
-                                    <Button type="button" onClick={handleWhatsApp} className="w-full h-auto py-5 text-lg gap-3 bg-green-600 hover:bg-green-700 text-white font-bold whitespace-normal" disabled={isSubmittingWhatsApp}>
-                                        {isSubmittingWhatsApp ? <Loader2 className="h-6 w-6 animate-spin" /> : <><MessageCircle className="h-6 w-6 shrink-0" /> Confirmar por WhatsApp</>}
+                                    <Button 
+                                      type="button" 
+                                      onClick={handleWhatsApp} 
+                                      className="w-full h-auto py-5 text-lg gap-3 bg-green-600 hover:bg-green-700 text-white font-bold whitespace-normal" 
+                                      disabled={isSubmittingWhatsApp}
+                                    >
+                                        {isSubmittingWhatsApp ? (
+                                          <>
+                                            <Loader2 className="h-6 w-6 animate-spin" />
+                                            Abriendo WhatsApp...
+                                          </>
+                                        ) : (
+                                          <>
+                                            <MessageCircle className="h-6 w-6 shrink-0" /> 
+                                            Confirmar por WhatsApp
+                                          </>
+                                        )}
                                     </Button>
                                 </div>
                             </form>
@@ -215,25 +258,30 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
                 </Card>
             </div>
             
-            <Card className="shadow-lg lg:sticky lg:top-24 border-2 border-primary/5">
-                <CardHeader className="bg-primary/5"><CardTitle className="font-headline text-lg text-primary">Resumen del Viaje</CardTitle></CardHeader>
+            <Card className="shadow-lg lg:sticky lg:top-24 border-2 border-primary/5 h-fit">
+                <CardHeader className="bg-primary/5">
+                    <CardTitle className="font-headline text-lg text-primary">Resumen del Viaje</CardTitle>
+                </CardHeader>
                 <CardContent className="pt-6 space-y-4">
-                    <div className="relative h-32 w-full"><Image src={car.imageUrl} alt={car.name} fill className="object-cover rounded-lg shadow-sm" /></div>
+                    <div className="relative h-32 w-full">
+                        <Image src={car.imageUrl} alt={car.name} fill className="object-cover rounded-lg shadow-sm" />
+                    </div>
                     <div className="space-y-1 text-sm">
-                        <p className="font-bold">{car.name}</p>
+                        <p className="font-bold text-primary">{car.name}</p>
                         <p className="text-xs text-muted-foreground">{reservationDetails.rentalDays} días de renta</p>
-                        <p className="text-xs font-mono">ID: {orderId}</p>
+                        <p className="text-xs font-mono bg-muted px-2 py-0.5 rounded w-fit">ID: {orderId}</p>
                     </div>
                     <Separator />
                     <div className="flex justify-between items-center text-xl font-bold text-primary">
-                        <span>Total:</span><span className="font-mono">${amountToPay.toFixed(2)}</span>
+                        <span>Total:</span>
+                        <span className="font-mono text-2xl">${amountToPay.toFixed(2)}</span>
                     </div>
                 </CardContent>
             </Card>
         </div>
 
         {/* FACTURA PARA PDF (HIDDEN) */}
-        <div className="absolute left-[-9999px] top-[-9999px]">
+        <div className="fixed left-[-9999px] top-[-9999px]">
           <div ref={invoiceRef} className="p-10 bg-white text-black w-[210mm] font-sans">
             <div className="flex justify-between items-center border-b-4 border-primary pb-6 mb-8">
               <div>
@@ -275,12 +323,24 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
             <div className="bg-gray-50 p-6 rounded-lg border">
               <h3 className="font-bold text-primary mb-4 uppercase text-sm">Desglose de Costos</h3>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span>Costo de Renta ({reservationDetails.rentalDays} días):</span><span>${reservationDetails.rentPrice.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span>Depósito de Garantía (Reembolsable):</span><span>$250.00</span></div>
-                <div className="flex justify-between font-bold border-t pt-2"><span>Total sin descuento:</span><span>${(reservationDetails.rentPrice + 250).toFixed(2)}</span></div>
+                <div className="flex justify-between">
+                  <span>Costo de Renta ({reservationDetails.rentalDays} días):</span>
+                  <span>${reservationDetails.rentPrice.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Depósito de Garantía (Reembolsable):</span>
+                  <span>$250.00</span>
+                </div>
+                <div className="flex justify-between font-bold border-t pt-2">
+                  <span>Total sin descuento:</span>
+                  <span>${(reservationDetails.rentPrice + 250).toFixed(2)}</span>
+                </div>
                 
                 {form.getValues('paymentOption') === 'full_payment' && (
-                  <div className="flex justify-between text-green-600 font-semibold italic"><span>Descuento por Pago Adelantado (20%):</span><span>-${reservationDetails.discountAmount.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-green-600 font-semibold italic">
+                    <span>Descuento por Pago Adelantado (20%):</span>
+                    <span>-${reservationDetails.discountAmount.toFixed(2)}</span>
+                  </div>
                 )}
                 
                 <Separator className="my-2" />
