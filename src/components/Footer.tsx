@@ -1,4 +1,4 @@
-﻿import Link from 'next/link';
+import Link from 'next/link';
 import { CarFront, Phone } from 'lucide-react';
 
 export default function Footer() {

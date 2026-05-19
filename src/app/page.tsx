@@ -1,4 +1,4 @@
-﻿import Header from '@/components/Header';
+import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { CarList } from '@/components/CarList';
 import { cars } from '@/lib/cars';

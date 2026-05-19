@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import Link from 'next/link';
 import { LifeBuoy, CarFront, HelpCircle, Menu } from 'lucide-react';
