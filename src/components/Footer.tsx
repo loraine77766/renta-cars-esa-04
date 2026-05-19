@@ -11,7 +11,7 @@ export default function Footer() {
               <div className="bg-yellow-700/20 p-1.5" style={{ fontFamily: 'Georgia, serif' }}>
                 <CarFront className="h-5 w-5 text-[hsl(35,30%,85%)]" />
               </div>
-              <span className="font-headline text-lg font-bold text-white" style={{ fontFamily: 'Georgia, serif' }}>Cuba Car Rental</span>
+              <span className="font-headline text-lg font-bold text-white">Renta Cars ESA</span>
             </div>
             <p className="text-sm text-[hsl(35,30%,75%)] leading-relaxed">
               Agencia On-Line con asistencia telefónica. Te ayudamos a encontrar tu auto ideal en Cuba.
@@ -41,7 +41,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="pt-8 border-t border-white/10 text-center">
-          <p className="text-xs text-[hsl(35,30%,65%)]">&copy; {new Date().getFullYear()} Cuba Car Rental. Todos los derechos reservados.</p>
+              <p className="text-xs text-[hsl(35,30%,65%)]">&copy; {new Date().getFullYear()} Renta Cars ESA. Todos los derechos reservados.</p>
         </div>
       </div>
     </footer>

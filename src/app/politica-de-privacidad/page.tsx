@@ -34,7 +34,7 @@ export default function PoliticaDePrivacidadPage() {
                 </p>
 
                 <div className="space-y-2">
-                    <h3 className="font-headline text-xl text-primary">Cuba Car Rental optiene sus datos personales de las siguientes maneras:</h3>
+                    <h3 className="font-headline text-xl text-primary">Renta Cars ESA optiene sus datos personales de las siguientes maneras:</h3>
                     <ul className="list-disc list-inside">
                         <li>Cuando se contacta con nosotros para pedir informamaciones de nuestros servicios</li>
                         <li>Cuando se registra en nuestro sitio</li>
@@ -48,7 +48,7 @@ export default function PoliticaDePrivacidadPage() {
                     <h3 className="font-headline text-xl text-primary">Contactaremos solo con usted:</h3>
                     <ul className="list-disc list-inside">
                         <li>Para informarla de nuevos servicios, nuevas ofertas y descuentos</li>
-                        <li>En caso que gane algun premio esponzorizado y organizado por Cuba Car Rental</li>
+                        <li>En caso que gane algun premio esponzorizado y organizado por Renta Cars ESA</li>
                         <li>Para darle respuesta a sus preguntas, dudas del servicio</li>
                         <li>Para ayudar a recopilar las planillas on-line en caso de necesidad</li>
                         <li>Para informarle en caso de cancelación de vuelos , reservas por causa mayor o por qualquier otra necesidad colegados a nuestros servicios</li>
@@ -56,7 +56,7 @@ export default function PoliticaDePrivacidadPage() {
                 </div>
 
                 <p>
-                    Toda su información personal quedará registrada en la base datos de Cuba Car Rental. Usamos su información solo para un analisis de mercado y un crecimiento de la compañía y no proporcionamos informaciones de nuestros clientes a terceros.
+                    Toda su información personal quedará registrada en la base datos de Renta Cars ESA. Usamos su información solo para un analisis de mercado y un crecimiento de la compañía y no proporcionamos informaciones de nuestros clientes a terceros.
                 </p>
 
                 <div className="space-y-2">

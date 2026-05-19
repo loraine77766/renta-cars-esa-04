@@ -48,7 +48,7 @@ export default function Header() {
             <div className="bg-yellow-700/30 p-1.5 rounded-none">
               <CarFront className="h-6 w-6" />
             </div>
-            <span className="font-headline text-xl font-bold tracking-wide" style={{ fontFamily: 'Georgia, serif' }}>Cuba Car Rental</span>
+            <span className="font-headline text-xl font-bold tracking-wide">Renta Cars ESA</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">
