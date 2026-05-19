@@ -257,7 +257,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
             <div className="flex justify-between items-center border-b-4 border-blue-900 pb-6 mb-8">
               <div>
                 <h1 className="text-4xl font-bold text-blue-900">FACTURA PROFORMA</h1>
-                <p className="text-md font-semibold mt-1">Renta Cars ESA - Blues Group USA LLC</p>
+                <p className="text-md font-semibold mt-1">Cuba Car Rental - Blues Group USA LLC</p>
               </div>
               <div className="text-right">
                 <p className="text-xl font-mono font-bold">ID: {orderId}</p>
@@ -314,7 +314,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
             
             <div className="mt-10 p-4 border rounded bg-blue-50 text-[11px]">
               <h4 className="font-bold mb-1">Notas Legales:</h4>
-              <p>Factura proforma emitida por Renta Cars ESA. El contrato final se firma en Cuba. El depósito de $250 es reembolsable al entregar el auto en perfectas condiciones. Blues Group USA LLC actúa como intermediario oficial.</p>
+              <p>Factura proforma emitida por Cuba Car Rental. El contrato final se firma en Cuba. El depósito de $250 es reembolsable al entregar el auto en perfectas condiciones. Blues Group USA LLC actúa como intermediario oficial.</p>
             </div>
 
             <p className="mt-8 text-[9px] text-center text-gray-400">

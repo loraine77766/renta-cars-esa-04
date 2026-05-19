@@ -38,7 +38,7 @@ export default function PoliticaDeCookiesPage() {
                 <div className="space-y-2">
                     <h3 className="font-headline text-xl text-primary">Cookies de terceros de medios sociales</h3>
                     <p>
-                        Para mejorar y hacer mas atractivo nuestro contenido de sitio web, a veces podemos incrustar contenido de video desde otros sitios web de medios sociales como YouTube o Facebook. Como resultado, cuando visita una página con contenido incrustado, se le pueden presentar cookies de estos sitios web. Renta Cars ESA no tiene control o responsabilidad sobre estas cookies y en consecuencia, usted debe verificar la política de cookies de terceros pertinente para obtener más información.
+                        Para mejorar y hacer mas atractivo nuestro contenido de sitio web, a veces podemos incrustar contenido de video desde otros sitios web de medios sociales como YouTube o Facebook. Como resultado, cuando visita una página con contenido incrustado, se le pueden presentar cookies de estos sitios web. Cuba Car Rental no tiene control o responsabilidad sobre estas cookies y en consecuencia, usted debe verificar la política de cookies de terceros pertinente para obtener más información.
                     </p>
                 </div>
 

@@ -55,7 +55,7 @@ export default function Header() {
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-2 text-primary hover:text-opacity-80 transition-colors">
             <Car className="h-7 w-7" />
-            <span className="font-headline text-2xl font-bold">Renta Cars ESA</span>
+            <span className="font-headline text-2xl font-bold">Cuba Car Rental</span>
           </Link>
           
           {/* Desktop Navigation */}
