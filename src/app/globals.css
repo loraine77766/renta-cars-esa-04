@@ -1,4 +1,4 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -8,31 +8,31 @@ body {
 
 @layer base {
   :root {
-    --background: 40 20% 95%;
-    --foreground: 165 30% 15%;
+    --background: 0 0% 97%;
+    --foreground: 270 20% 18%;
     --card: 0 0% 100%;
-    --card-foreground: 165 30% 15%;
+    --card-foreground: 270 20% 18%;
     --popover: 0 0% 100%;
-    --popover-foreground: 165 30% 15%;
-    --primary: 165 55% 35%;
+    --popover-foreground: 270 20% 18%;
+    --primary: 270 35% 38%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 40 30% 90%;
-    --secondary-foreground: 165 55% 25%;
-    --muted: 40 15% 90%;
-    --muted-foreground: 165 10% 45%;
-    --accent: 30 80% 55%;
+    --secondary: 270 15% 92%;
+    --secondary-foreground: 270 35% 30%;
+    --muted: 270 10% 92%;
+    --muted-foreground: 270 10% 45%;
+    --accent: 40 70% 50%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 98%;
-    --border: 40 15% 82%;
-    --input: 40 15% 82%;
-    --ring: 165 55% 35%;
-    --chart-1: 165 55% 35%;
-    --chart-2: 30 80% 55%;
+    --border: 270 10% 85%;
+    --input: 270 10% 85%;
+    --ring: 270 35% 38%;
+    --chart-1: 270 35% 38%;
+    --chart-2: 40 70% 50%;
     --chart-3: 200 60% 50%;
     --chart-4: 330 65% 50%;
     --chart-5: 85 55% 45%;
-    --radius: 0.75rem;
+    --radius: 0.5rem;
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -41,27 +41,6 @@ body {
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-  .dark {
-    --background: 165 30% 8%;
-    --foreground: 40 15% 85%;
-    --card: 165 25% 14%;
-    --card-foreground: 40 15% 85%;
-    --popover: 165 25% 14%;
-    --popover-foreground: 40 15% 85%;
-    --primary: 165 50% 50%;
-    --primary-foreground: 165 30% 8%;
-    --secondary: 165 25% 18%;
-    --secondary-foreground: 40 15% 85%;
-    --muted: 165 25% 18%;
-    --muted-foreground: 40 10% 60%;
-    --accent: 30 75% 55%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62% 35%;
-    --destructive-foreground: 40 15% 85%;
-    --border: 165 20% 25%;
-    --input: 165 20% 25%;
-    --ring: 165 50% 50%;
   }
 }
 
@@ -75,7 +54,7 @@ body {
 }
 
 @layer components {
-  .hero-tropical {
-    background: linear-gradient(135deg, hsl(165 55% 35%), hsl(185 50% 40%));
+  .hero-sunset {
+    background: linear-gradient(135deg, hsl(270 35% 38%), hsl(300 30% 45%));
   }
 }

@@ -139,7 +139,7 @@ export default function ConfirmationDetails({ car, startDate, endDate, pickupLoc
     try {
       const msg = `¡Hola! Mi ID de pedido es: ${orderId}. Quiero confirmar mi reserva de auto.`;
       const encodedMsg = encodeURIComponent(msg);
-      const whatsappUrl = `https://wa.me/15878569144?text=${encodedMsg}`;
+      const whatsappUrl = `https://wa.me/15878565382?text=${encodedMsg}`;
       window.open(whatsappUrl, '_blank');
       toast({ title: "Abriendo WhatsApp para confirmar..." });
     } catch (e) {

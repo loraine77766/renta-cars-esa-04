@@ -30,9 +30,9 @@ export function CarCard({ car }: CarCardProps) {
           <h3 className="font-headline text-xl font-bold text-white drop-shadow-lg">{car.name}</h3>
           <div className="flex items-baseline gap-1 bg-white/90 dark:bg-gray-800/90 px-3 py-1 rounded-lg">
             {car.originalPricePerDay && (
-              <span className="text-xs text-gray-500 line-through"></span>
+              <span className="text-xs text-gray-500 line-through">${car.originalPricePerDay}</span>
             )}
-            <span className="font-headline text-lg font-bold text-accent"></span>
+            <span className="font-headline text-lg font-bold text-accent">${car.pricePerDay}</span>
             <span className="text-xs text-gray-500">/día</span>
           </div>
         </div>
@@ -48,7 +48,7 @@ export function CarCard({ car }: CarCardProps) {
             )}
         </div>
         <Button asChild className="w-full bg-primary hover:bg-primary/90 rounded-lg">
-            <Link href={/reserva?carId=}>
+            <Link href={`/reserva?carId=${car.id}`}>
                 Rentar Ahora
             </Link>
         </Button>
