@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" rx="20" fill="#DC2626"/>
+  <path d="M22 55c0 0 3-12 6-18l4-8c1-2 3-3 5-3h26c2 0 4 1 5 3l4 8c3 6 6 18 6 18H22z" fill="#fff"/>
+  <circle cx="32" cy="68" r="8" fill="#fff"/><circle cx="32" cy="68" r="4" fill="#DC2626"/>
+  <circle cx="68" cy="68" r="8" fill="#fff"/><circle cx="68" cy="68" r="4" fill="#DC2626"/>
+  <text x="50" y="32" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold">RO</text>
+</svg>

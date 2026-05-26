@@ -139,7 +139,7 @@ export const cars: Car[] = [
     name: 'Hyundai Accent',
     description: 'Sedán moderno y económico para un viaje suave.',
     pricePerDay: 85,
-    imageUrl: '/images/images/Hyundai Accent.jpg',
+    imageUrl: '/images/images/Hyundai-Accent.jpg',
     imageHint: 'sedan white',
     features: ['4 Puertas', '5 Pasajeros', 'Automático', 'Gasolina', 'Chapa ESA'],
     details: {
@@ -155,7 +155,7 @@ export const cars: Car[] = [
     name: 'Hyundai Grand i10',
     description: 'Compacto eficiente y cómodo para la ciudad.',
     pricePerDay: 70,
-    imageUrl: '/images/images/Hyundai Grand I10.jpg',
+    imageUrl: '/images/images/Hyundai-Grand-I10.jpg',
     imageHint: 'compact blue',
     features: ['4 Pasajeros', 'Automático', 'Económico', 'Chapa ESA'],
     details: {
@@ -203,7 +203,7 @@ export const cars: Car[] = [
     name: 'Dongfeng Aeolus Yixuan',
     description: 'Diseño deportivo y alta tecnología para tu viaje.',
     pricePerDay: 100,
-    imageUrl: '/images/images/Dongfeng Aeolus Yixuan.png',
+    imageUrl: '/images/images/Dongfeng-Aeolus-Yixuan.png',
     imageHint: 'sedan sport white',
     features: ['5 Pasajeros', 'Automático', 'Turbo', 'Chapa ESA'],
     details: {

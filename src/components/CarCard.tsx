@@ -40,12 +40,9 @@ export function CarCard({ car }: CarCardProps) {
       <div className="p-4 space-y-3">
         <p className="text-sm text-muted-foreground line-clamp-2">{car.description}</p>
         <div className="flex flex-wrap gap-1.5">
-            {car.features.slice(0, 4).map((feature) => (
+            {car.features.map((feature) => (
                 <Badge key={feature} variant="secondary" className="text-xs font-normal">{feature}</Badge>
             ))}
-            {car.features.length > 4 && (
-                <Badge variant="outline" className="text-xs">+{car.features.length - 4}</Badge>
-            )}
         </div>
         <Button asChild className="w-full bg-primary hover:bg-primary/90 rounded-lg">
             <Link href={`/reserva?carId=${car.id}`}>
